@@ -388,27 +388,37 @@
       });
     }
     
-    // تحديد نوع الملف
+    // تحديد نوع الملف (مُحسن للتعرف على الملفات المضغوطة)
     function getFileType(mimeType, fileName) {
-      // التحقق من الامتداد أولاً للملفات المضغوطة
-      if (fileName && (
-          fileName.toLowerCase().endsWith('.zip') ||
-          fileName.toLowerCase().endsWith('.rar') ||
-          fileName.toLowerCase().endsWith('.7z') ||
-          fileName.toLowerCase().endsWith('.tar') ||
-          fileName.toLowerCase().endsWith('.gz')
+      // فحص شامل للملفات المضغوطة
+      const archiveExtensions = ['.zip', '.rar', '.7z', '.tar', '.gz', '.bz2'];
+      const lowerFileName = fileName ? fileName.toLowerCase() : '';
+      
+      for (const ext of archiveExtensions) {
+        if (lowerFileName.endsWith(ext)) {
+          console.log('Archive detected by extension:', fileName, ext);
+          return 'archive';
+        }
+      }
+      
+      // فحص نوع MIME
+      if (mimeType && (
+          mimeType.includes('zip') || 
+          mimeType.includes('rar') || 
+          mimeType.includes('archive') ||
+          mimeType.includes('compressed')
       )) {
+        console.log('Archive detected by MIME:', fileName, mimeType);
         return 'archive';
       }
       
-      if (mimeType.startsWith('image/')) return 'image';
-      if (mimeType.startsWith('video/')) return 'video';
-      if (mimeType.startsWith('audio/')) return 'audio';
-      if (mimeType.includes('pdf') || mimeType.includes('document') || 
+      if (mimeType && mimeType.startsWith('image/')) return 'image';
+      if (mimeType && mimeType.startsWith('video/')) return 'video';
+      if (mimeType && mimeType.startsWith('audio/')) return 'audio';
+      if (mimeType && (mimeType.includes('pdf') || mimeType.includes('document') || 
           mimeType.includes('text') || mimeType.includes('sheet') ||
-          mimeType.includes('presentation')) return 'document';
-      if (mimeType.includes('zip') || mimeType.includes('rar') || 
-          mimeType.includes('archive')) return 'archive';
+          mimeType.includes('presentation'))) return 'document';
+      
       return 'other';
     }
     
