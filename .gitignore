@@ -218,3 +218,9 @@
 "*.tar" 
 "*.tar.gz" 
 "*.rar" 
+
+.env
+.env.*
+*.env
+*.key
+*.pem
