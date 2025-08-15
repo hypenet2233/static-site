@@ -390,6 +390,17 @@
     
     // تحديد نوع الملف
     function getFileType(mimeType, fileName) {
+      // التحقق من الامتداد أولاً للملفات المضغوطة
+      if (fileName && (
+          fileName.toLowerCase().endsWith('.zip') ||
+          fileName.toLowerCase().endsWith('.rar') ||
+          fileName.toLowerCase().endsWith('.7z') ||
+          fileName.toLowerCase().endsWith('.tar') ||
+          fileName.toLowerCase().endsWith('.gz')
+      )) {
+        return 'archive';
+      }
+      
       if (mimeType.startsWith('image/')) return 'image';
       if (mimeType.startsWith('video/')) return 'video';
       if (mimeType.startsWith('audio/')) return 'audio';
@@ -397,8 +408,7 @@
           mimeType.includes('text') || mimeType.includes('sheet') ||
           mimeType.includes('presentation')) return 'document';
       if (mimeType.includes('zip') || mimeType.includes('rar') || 
-          mimeType.includes('archive') || fileName.endsWith('.zip') ||
-          fileName.endsWith('.rar') || fileName.endsWith('.7z')) return 'archive';
+          mimeType.includes('archive')) return 'archive';
       return 'other';
     }
     
@@ -424,34 +434,49 @@
           return;
         }
         
+        console.log('Extracting file:', file.name, 'Type:', file.type);
         showMessage('📦 جاري فك ضغط الملف...', 'info');
         
         // تحويل base64 إلى ArrayBuffer
-        const base64Data = file.data.split(',')[1];
+        let base64Data;
+        if (file.data.includes(',')) {
+          base64Data = file.data.split(',')[1];
+        } else {
+          base64Data = file.data;
+        }
+        
         const binaryString = atob(base64Data);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
         }
         
+        console.log('Binary data prepared, size:', bytes.length);
+        
         // فك ضغط الملف باستخدام JSZip
         const zip = await JSZip.loadAsync(bytes);
+        console.log('Zip loaded successfully');
         
         // استخراج الملفات
         const extractedFiles = [];
         for (const [filename, fileObj] of Object.entries(zip.files)) {
           if (!fileObj.dir) {
-            const content = await fileObj.async('text');
-            extractedFiles.push({
-              name: filename,
-              content: content,
-              size: content.length
-            });
+            try {
+              const content = await fileObj.async('text');
+              extractedFiles.push({
+                name: filename,
+                content: content,
+                size: content.length
+              });
+              console.log('Extracted file:', filename, 'Size:', content.length);
+            } catch (e) {
+              console.error('Error extracting file:', filename, e);
+            }
           }
         }
         
         if (extractedFiles.length === 0) {
-          showMessage('⚠️ لا توجد ملفات في الأرشيف', 'error');
+          showMessage('⚠️ لا توجد ملفات نصية في الأرشيف', 'error');
           return;
         }
         
@@ -461,7 +486,7 @@
         
       } catch (error) {
         console.error('Error extracting archive:', error);
-        showMessage('❌ فشل في فك ضغط الملف', 'error');
+        showMessage('❌ فشل في فك ضغط الملف: ' + error.message, 'error');
       }
     }
     
@@ -971,6 +996,16 @@
     async function refreshFiles() {
       await loadFiles();
       showMessage('🔄 تم تحديث قائمة الملفات', 'info');
+      
+      // إعادة فحص الملفات المضغوطة
+      setTimeout(() => {
+        allFiles.forEach(file => {
+          const fileType = getFileType(file.type, file.name);
+          if (fileType === 'archive') {
+            console.log('Archive file detected:', file.name);
+          }
+        });
+      }, 1000);
     }
     
     // تحميل الملفات من قاعدة البيانات
