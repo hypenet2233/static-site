@@ -16,6 +16,8 @@
     --btn-hover: #374151;
     --shadow: 0 10px 25px rgba(0,0,0,.35);
     --radius: 18px;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
   }
   * { box-sizing: border-box; }
   html, body {
@@ -35,15 +37,224 @@
     display: grid; gap: 14px;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
-  a.btn {
+  a.btn, button.btn {
     display: inline-block; text-decoration: none; text-align: center; cursor: pointer;
     background: var(--btn-bg); color: var(--text); padding: 14px 16px;
     border-radius: 14px; border: 1px solid rgba(255,255,255,.08);
     transition: transform .12s ease, background .12s ease, border-color .12s ease;
     box-shadow: 0 6px 14px rgba(0,0,0,.25);
+    font-family: inherit; font-size: inherit;
   }
-  a.btn:hover { background: var(--btn-hover); transform: translateY(-1px); }
-  a.btn.primary { background: var(--accent-2); border-color: transparent; color: #fff; }
+  a.btn:hover, button.btn:hover { background: var(--btn-hover); transform: translateY(-1px); }
+  a.btn.primary, button.btn.primary { background: var(--accent-2); border-color: transparent; color: #fff; }
+  .btn.success { background: var(--accent); border-color: transparent; color: #fff; }
+  .btn.danger { background: var(--danger); border-color: transparent; color: #fff; }
+  .btn.danger:hover { background: var(--danger-hover); }
+  
+  .files-section {
+    margin: 24px 0;
+  }
+  
+  .stats-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: rgba(255,255,255,.02);
+    border-radius: var(--radius);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .stat-item {
+    text-align: center;
+  }
+  
+  .stat-number {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--accent-2);
+  }
+  
+  .stat-label {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  
+  .search-bar {
+    margin-bottom: 20px;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--btn-bg);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+  }
+  
+  .search-input:focus {
+    outline: none;
+    border-color: var(--accent-2);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, .1);
+  }
+  
+  .filter-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .filter-tab {
+    padding: 8px 16px;
+    background: var(--btn-bg);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all .2s ease;
+    font-size: 12px;
+  }
+  
+  .filter-tab.active {
+    background: var(--accent-2);
+    border-color: var(--accent-2);
+    color: #fff;
+  }
+  
+  .filter-tab:hover {
+    background: var(--btn-hover);
+  }
+  
+  .files-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  
+  .file-card {
+    background: rgba(255,255,255,.02);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: var(--radius);
+    padding: 16px;
+    transition: all .2s ease;
+  }
+  
+  .file-card:hover {
+    background: rgba(255,255,255,.04);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+  
+  .file-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  
+  .file-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin-left: 12px;
+  }
+  
+  .file-icon.image { background: linear-gradient(45deg, #10b981, #059669); }
+  .file-icon.document { background: linear-gradient(45deg, #3b82f6, #1d4ed8); }
+  .file-icon.audio { background: linear-gradient(45deg, #8b5cf6, #7c3aed); }
+  .file-icon.video { background: linear-gradient(45deg, #ef4444, #dc2626); }
+  .file-icon.archive { background: linear-gradient(45deg, #f59e0b, #d97706); }
+  .file-icon.other { background: linear-gradient(45deg, #6b7280, #4b5563); }
+  
+  .file-info {
+    flex: 1;
+  }
+  
+  .file-name {
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+    word-break: break-word;
+  }
+  
+  .file-meta {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  
+  .file-preview {
+    margin: 12px 0;
+    text-align: center;
+  }
+  
+  .file-preview img {
+    max-width: 100%;
+    max-height: 120px;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+  
+  .file-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  
+  .btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+    flex: 1;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+  
+  .status-message {
+    margin: 16px 0;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+  }
+  
+  .status-success {
+    background: rgba(34, 197, 94, .1);
+    color: var(--accent);
+    border: 1px solid rgba(34, 197, 94, .2);
+  }
+  
+  .status-error {
+    background: rgba(239, 68, 68, .1);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, .2);
+  }
+  
+  .status-info {
+    background: rgba(59, 130, 246, .1);
+    color: var(--accent-2);
+    border: 1px solid rgba(59, 130, 246, .2);
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
   footer { margin-top: 18px; color: var(--muted); font-size: 13px; }
 </style>
 </head>
@@ -52,9 +263,739 @@
   <div class="wrap">
     <div class="card">
       <h1>الصفحة 2</h1>
-      <p class="lead">هذه صفحة الصفحة 2.</p>
+      <p class="lead">هذه صفحة الصفحة 2 - مستعرض الملفات المرفوعة.</p>
+      
+      <!-- شريط الإحصائيات -->
+      <div class="stats-bar">
+        <div class="stat-item">
+          <div class="stat-number" id="total-files">0</div>
+          <div class="stat-label">إجمالي الملفات</div>
+          <div class="filter-tab" onclick="filterFiles('other')">📁 أخرى</div>
+      </div>
+        <div class="stat-item">
+          <div class="stat-number" id="total-size">0</div>
+          <div class="stat-label">الحجم الإجمالي</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="file-types">0</div>
+          <div class="stat-label">أنواع الملفات</div>
+        </div>
+      </div>
+      
+      <!-- رسائل الحالة -->
+      <div id="status-message" class="hidden"></div>
+      
+      <!-- شريط البحث -->
+      <div class="search-bar">
+        <input 
+          type="text" 
+          class="search-input" 
+          id="search-input" 
+          placeholder="🔍 البحث في الملفات..."
+          oninput="searchFiles()"
+        />
+      </div>
+      
+      <!-- تبويبات الفلتر -->
+      <div class="filter-tabs">
+        <div class="filter-tab active" onclick="filterFiles('all')">الكل</div>
+        <div class="filter-tab" onclick="filterFiles('image')">🖼️ الصور</div>
+        <div class="filter-tab" onclick="filterFiles('document')">📄 المستندات</div>
+        <div class="filter-tab" onclick="filterFiles('audio')">🎵 الصوتيات</div>
+        <div class="filter-tab" onclick="filterFiles('video')">🎬 الفيديو</div>
+        <div class="filter-tab" onclick="filterFiles('archive')">📦 الأرشيف</div>
+      </div>
+      
+      <!-- منطقة الملفات -->
+      <div class="files-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3>الملفات المحفوظة</h3>
+          <div>
+            <button class="btn btn-small" onclick="refreshFiles()">🔄 تحديث</button>
+            <button class="btn success btn-small" onclick="selectAll()">✅ تحديد الكل</button>
+            <button class="btn danger btn-small" onclick="deleteSelected()">🗑️ حذف المحدد</button>
+          </div>
+        </div>
+        
+        <div id="files-container" class="files-grid">
+          <!-- سيتم إدراج الملفات هنا -->
+        </div>
+      </div>
+      
       <a class="btn primary" href="index.html">العودة للصفحة الرئيسية</a>
+      
+      <footer>
+        <p>📂 <strong>مستعرض الملفات:</strong> عرض وإدارة الملفات المرفوعة من الصفحة 1</p>
+      </footer>
     </div>
   </div>
+
+  <script>
+    // متغيرات عامة
+    const DB_NAME = 'FilesStorage';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'files';
+    
+    let db;
+    let allFiles = [];
+    let filteredFiles = [];
+    let currentFilter = 'all';
+    let selectedFiles = new Set();
+    
+    // تهيئة قاعدة البيانات
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+        
+        request.onupgradeneeded = (event) => {
+          db = event.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            store.createIndex('name', 'name', { unique: false });
+            store.createIndex('uploadTime', 'uploadTime', { unique: false });
+          }
+        };
+      });
+    }
+    
+    // قراءة جميع الملفات
+    function getAllFiles() {
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.getAll();
+        
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    // حذف ملف
+    function deleteFile(id) {
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.delete(id);
+        
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    // تحديد نوع الملف
+    function getFileType(mimeType, fileName) {
+      if (mimeType.startsWith('image/')) return 'image';
+      if (mimeType.startsWith('video/')) return 'video';
+      if (mimeType.startsWith('audio/')) return 'audio';
+      if (mimeType.includes('pdf') || mimeType.includes('document') || 
+          mimeType.includes('text') || mimeType.includes('sheet') ||
+          mimeType.includes('presentation')) return 'document';
+      if (mimeType.includes('zip') || mimeType.includes('rar') || 
+          mimeType.includes('archive') || fileName.endsWith('.zip') ||
+          fileName.endsWith('.rar') || fileName.endsWith('.7z')) return 'archive';
+      return 'other';
+    }
+    
+    // الحصول على أيقونة نوع الملف
+    function getFileIcon(type) {
+      const icons = {
+        image: '🖼️',
+        video: '🎬',
+        audio: '🎵',
+        document: '📄',
+        archive: '📦',
+        other: '📁'
+      };
+      return icons[type] || '📁';
+    }
+    
+    // فك ضغط الملفات وعرض المحتويات
+    async function extractArchive(fileId) {
+      try {
+        const file = allFiles.find(f => f.id === fileId);
+        if (!file) {
+          showMessage('❌ الملف غير موجود', 'error');
+          return;
+        }
+        
+        showMessage('📦 جاري فك ضغط الملف...', 'info');
+        
+        // تحويل base64 إلى ArrayBuffer
+        const base64Data = file.data.split(',')[1];
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        // فك ضغط الملف باستخدام JSZip
+        const zip = await JSZip.loadAsync(bytes);
+        
+        // استخراج الملفات
+        const extractedFiles = [];
+        for (const [filename, fileObj] of Object.entries(zip.files)) {
+          if (!fileObj.dir) {
+            const content = await fileObj.async('text');
+            extractedFiles.push({
+              name: filename,
+              content: content,
+              size: content.length
+            });
+          }
+        }
+        
+        if (extractedFiles.length === 0) {
+          showMessage('⚠️ لا توجد ملفات في الأرشيف', 'error');
+          return;
+        }
+        
+        // عرض قائمة الملفات المستخرجة
+        displayExtractedFiles(file, extractedFiles);
+        showMessage(`✅ تم استخراج ${extractedFiles.length} ملف من الأرشيف`, 'success');
+        
+      } catch (error) {
+        console.error('Error extracting archive:', error);
+        showMessage('❌ فشل في فك ضغط الملف', 'error');
+      }
+    }
+    
+    // عرض الملفات المستخرجة
+    function displayExtractedFiles(archiveFile, extractedFiles) {
+      const archiveCard = document.querySelector(`[data-file-id="${archiveFile.id}"]`);
+      if (!archiveCard) return;
+      
+      // إزالة المحتوى السابق إذا كان موجوداً
+      const existingContent = archiveCard.querySelector('.archive-content');
+      if (existingContent) {
+        existingContent.remove();
+      }
+      
+      // إنشاء محتوى جديد
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'archive-content';
+      
+      extractedFiles.forEach(file => {
+        const fileDiv = document.createElement('div');
+        fileDiv.className = 'archive-file';
+        
+        fileDiv.innerHTML = `
+          <span class="archive-file-name">📄 ${file.name}</span>
+          <span class="archive-file-size">${formatFileSize(file.size)}</span>
+          <button class="archive-file-extract" onclick="saveExtractedFile('${archiveFile.id}', '${file.name}')">
+            💾 حفظ
+          </button>
+          <button class="archive-file-extract" onclick="viewExtractedFile('${archiveFile.id}', '${file.name}')" style="background: #10b981;">
+            👁️ عرض
+          </button>
+        `;
+        
+        contentDiv.appendChild(fileDiv);
+      });
+      
+      // إدراج المحتوى في كارت الملف
+      archiveCard.appendChild(contentDiv);
+      
+      // حفظ الملفات المستخرجة في الذاكرة المؤقتة
+      if (!window.extractedFilesCache) {
+        window.extractedFilesCache = {};
+      }
+      window.extractedFilesCache[archiveFile.id] = extractedFiles;
+    }
+    
+    // حفظ ملف مستخرج كملف جديد
+    async function saveExtractedFile(archiveId, fileName) {
+      try {
+        const extractedFiles = window.extractedFilesCache[archiveId];
+        if (!extractedFiles) {
+          showMessage('❌ لم يتم العثور على الملفات المستخرجة', 'error');
+          return;
+        }
+        
+        const file = extractedFiles.find(f => f.name === fileName);
+        if (!file) {
+          showMessage('❌ لم يتم العثور على الملف', 'error');
+          return;
+        }
+        
+        // تحديد نوع الملف ومحتواه
+        let mimeType = 'text/plain';
+        let processedContent = file.content;
+        
+        if (fileName.endsWith('.json')) {
+          mimeType = 'application/json';
+          // تنسيق JSON إذا كان صالحاً
+          try {
+            const jsonData = JSON.parse(file.content);
+            processedContent = JSON.stringify(jsonData, null, 2);
+          } catch (e) {
+            // إذا لم يكن JSON صالح، احتفظ بالمحتوى الأصلي
+          }
+        } else if (fileName.endsWith('.txt')) {
+          mimeType = 'text/plain';
+        }
+        
+        // تحويل المحتوى إلى base64
+        const base64Content = btoa(unescape(encodeURIComponent(processedContent)));
+        const dataUrl = `data:${mimeType};base64,${base64Content}`;
+        
+        // إنشاء بيانات الملف الجديد
+        const newFileData = {
+          id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+          name: fileName,
+          size: new Blob([processedContent]).size,
+          type: mimeType,
+          data: dataUrl,
+          uploadTime: new Date().toLocaleString('ar-SA'),
+          timestamp: Date.now(),
+          extractedFrom: archiveId
+        };
+        
+        // حفظ الملف في قاعدة البيانات
+        await saveFile(newFileData);
+        
+        // تحديث العرض
+        await loadFiles();
+        
+        showMessage(`✅ تم حفظ ${fileName} بنجاح`, 'success');
+        
+      } catch (error) {
+        console.error('Error saving extracted file:', error);
+        showMessage('❌ فشل في حفظ الملف', 'error');
+      }
+    }
+    
+    // عرض ملف مستخرج
+    function viewExtractedFile(archiveId, fileName) {
+      try {
+        const extractedFiles = window.extractedFilesCache[archiveId];
+        if (!extractedFiles) {
+          showMessage('❌ لم يتم العثور على الملفات المستخرجة', 'error');
+          return;
+        }
+        
+        const file = extractedFiles.find(f => f.name === fileName);
+        if (!file) {
+          showMessage('❌ لم يتم العثور على الملف', 'error');
+          return;
+        }
+        
+        // فتح نافذة جديدة لعرض المحتوى
+        const newWindow = window.open('', '_blank');
+        newWindow.document.write(`
+          <html dir="rtl">
+            <head>
+              <title>${fileName}</title>
+              <meta charset="utf-8">
+              <style>
+                body {
+                  font-family: 'Courier New', monospace;
+                  background: #1e293b;
+                  color: #e2e8f0;
+                  padding: 20px;
+                  margin: 0;
+                  line-height: 1.6;
+                }
+                .header {
+                  background: #334155;
+                  padding: 15px;
+                  border-radius: 8px;
+                  margin-bottom: 20px;
+                  border-left: 4px solid #3b82f6;
+                }
+                .content {
+                  background: #0f172a;
+                  padding: 20px;
+                  border-radius: 8px;
+                  white-space: pre-wrap;
+                  max-height: 80vh;
+                  overflow-y: auto;
+                  border: 1px solid #374151;
+                }
+                .json-key { color: #60a5fa; }
+                .json-string { color: #34d399; }
+                .json-number { color: #fbbf24; }
+                .json-boolean { color: #f87171; }
+                h1, h2, h3 { color: #60a5fa; }
+                .stats { color: #10b981; }
+                .section { border-left: 3px solid #3b82f6; padding-left: 10px; margin: 10px 0; }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                <h2>📄 ${fileName}</h2>
+                <p>الحجم: ${formatFileSize(file.content.length)} | مستخرج من أرشيف</p>
+              </div>
+              <div class="content">${formatFileContent(file.content, fileName)}</div>
+            </body>
+          </html>
+        `);
+        newWindow.document.close();
+        
+      } catch (error) {
+        console.error('Error viewing extracted file:', error);
+        showMessage('❌ فشل في عرض الملف', 'error');
+      }
+    }
+    
+    // تنسيق محتوى الملف حسب نوعه
+    function formatFileContent(content, fileName) {
+      if (fileName.endsWith('.json')) {
+        try {
+          const jsonData = JSON.parse(content);
+          return syntaxHighlightJson(jsonData);
+        } catch (e) {
+          return escapeHtml(content);
+        }
+      } else if (fileName.endsWith('.txt')) {
+        // تنسيق خاص للتقارير النصية
+        if (content.includes('📊 تقرير تحليل رسائل قروب')) {
+          return formatReportContent(content);
+        }
+        return escapeHtml(content);
+      }
+      return escapeHtml(content);
+    }
+    
+    // تمييز صيغة JSON
+    function syntaxHighlightJson(obj) {
+      const json = JSON.stringify(obj, null, 2);
+      return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+        let cls = 'json-number';
+        if (/^"/.test(match)) {
+          if (/:$/.test(match)) {
+            cls = 'json-key';
+          } else {
+            cls = 'json-string';
+          }
+        } else if (/true|false/.test(match)) {
+          cls = 'json-boolean';
+        } else if (/null/.test(match)) {
+          cls = 'json-boolean';
+        }
+        return '<span class="' + cls + '">' + match + '</span>';
+      });
+    }
+    
+    // تنسيق محتوى التقارير
+    function formatReportContent(content) {
+      return content
+        .replace(/📊 تقرير تحليل رسائل قروب:(.+)/g, '<h1>📊 تقرير تحليل رسائل قروب:$1</h1>')
+        .replace(/================================================================================/g, '<hr style="border: 1px solid #374151;">')
+        .replace(/📅 تاريخ الاستخراج:(.+)/g, '<div class="stats">📅 تاريخ الاستخراج:$1</div>')
+        .replace(/📈 إجمالي الرسائل:(.+)/g, '<div class="stats">📈 إجمالي الرسائل:$1</div>')
+        .replace(/✨ رسائل تم تحليلها بالذكاء الاصطناعي:(.+)/g, '<div class="stats">✨ رسائل تم تحليلها بالذكاء الاصطناعي:$1</div>')
+        .replace(/📱 رسائل تحتوي على أرقام:(.+)/g, '<div class="stats">📱 رسائل تحتوي على أرقام:$1</div>')
+        .replace(/💰 رسائل تحتوي على أسعار:(.+)/g, '<div class="stats">💰 رسائل تحتوي على أسعار:$1</div>')
+        .replace(/🔍 رسائل مطلوب:(.+)/g, '<div class="stats">🔍 رسائل مطلوب:$1</div>')
+        .replace(/🏠 رسائل معروض:(.+)/g, '<div class="stats">🏠 رسائل معروض:$1</div>')
+        .replace(/📋 ملخص البيانات المستخرجة:/g, '<h2>📋 ملخص البيانات المستخرجة:</h2>')
+        .replace(/📝 تفاصيل الرسائل:/g, '<h2>📝 تفاصيل الرسائل:</h2>')
+        .replace(/رسالة رقم (\d+):/g, '<h3 class="section">رسالة رقم $1:</h3>')
+        .replace(/👤 المرسل:(.+)/g, '<div>👤 المرسل:$1</div>')
+        .replace(/📱 رقم المرسل:(.+)/g, '<div>📱 رقم المرسل:$1</div>')
+        .replace(/🏷️ نوع الرسالة:(.+)/g, '<div>🏷️ نوع الرسالة:$1</div>')
+        .replace(/🧠 تم تحليلها بالذكاء الاصطناعي:(.+)/g, '<div>🧠 تم تحليلها بالذكاء الاصطناعي:$1</div>')
+        .replace(/📞 أرقام إضافية:(.+)/g, '<div>📞 أرقام إضافية:$1</div>')
+        .replace(/💰 الأسعار:(.+)/g, '<div>💰 الأسعار:$1</div>')
+        .replace(/🗺️ المناطق:(.+)/g, '<div>🗺️ المناطق:$1</div>')
+        .replace(/🏠 نوع العقار:(.+)/g, '<div>🏠 نوع العقار:$1</div>')
+        .replace(/📄 نص الرسالة:/g, '<div style="margin-top: 10px;"><strong>📄 نص الرسالة:</strong></div>')
+        .replace(/==================================================/g, '<hr style="border: 1px dashed #374151; margin: 20px 0;">')
+        .replace(/------------------------------------------/g, '<hr style="border: 1px dotted #374151; margin: 15px 0;">')
+        .replace(/•(.+)/g, '<div style="margin-left: 20px;">•$1</div>');
+    }
+    
+    // هروب HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // تنسيق حجم الملف
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // عرض رسالة الحالة
+    function showMessage(message, type) {
+      const statusDiv = document.getElementById('status-message');
+      statusDiv.textContent = message;
+      statusDiv.className = `status-message status-${type}`;
+      statusDiv.classList.remove('hidden');
+      
+      setTimeout(() => {
+        statusDiv.classList.add('hidden');
+      }, 4000);
+    }
+    
+    // تحديث الإحصائيات
+    function updateStats() {
+      const totalFiles = allFiles.length;
+      const totalSize = allFiles.reduce((sum, file) => sum + file.size, 0);
+      const fileTypes = new Set(allFiles.map(file => getFileType(file.type, file.name))).size;
+      
+      document.getElementById('total-files').textContent = totalFiles;
+      document.getElementById('total-size').textContent = formatFileSize(totalSize);
+      document.getElementById('file-types').textContent = fileTypes;
+    }
+    
+    // فلترة الملفات
+    function filterFiles(type) {
+      currentFilter = type;
+      
+      // تحديث التبويبات
+      document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      // فلترة الملفات
+      if (type === 'all') {
+        filteredFiles = [...allFiles];
+      } else {
+        filteredFiles = allFiles.filter(file => getFileType(file.type, file.name) === type);
+      }
+      
+      displayFiles();
+    }
+    
+    // البحث في الملفات
+    function searchFiles() {
+      const searchTerm = document.getElementById('search-input').value.toLowerCase();
+      
+      let baseFiles = currentFilter === 'all' ? allFiles : 
+                     allFiles.filter(file => getFileType(file.type, file.name) === currentFilter);
+      
+      if (searchTerm) {
+        filteredFiles = baseFiles.filter(file => 
+          file.name.toLowerCase().includes(searchTerm)
+        );
+      } else {
+        filteredFiles = [...baseFiles];
+      }
+      
+      displayFiles();
+    }
+    
+    // عرض الملفات
+    function displayFiles() {
+      const container = document.getElementById('files-container');
+      
+      if (filteredFiles.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📂</div>
+            <h3>لا توجد ملفات</h3>
+            <p>لا توجد ملفات تطابق المعايير المحددة</p>
+            <a href="page1.html" class="btn primary">رفع ملفات جديدة</a>
+          </div>
+        `;
+        return;
+      }
+      
+      const fileCards = filteredFiles.map(file => {
+        const fileType = getFileType(file.type);
+        const fileIcon = getFileIcon(fileType);
+        const isSelected = selectedFiles.has(file.id);
+        
+        let preview = '';
+        if (fileType === 'image') {
+          preview = `
+            <div class="file-preview">
+              <img src="${file.data}" alt="${file.name}" onclick="viewFile('${file.id}')">
+            </div>
+          `;
+        }
+        
+        return `
+          <div class="file-card ${isSelected ? 'selected' : ''}" data-file-id="${file.id}">
+            <div class="file-header">
+              <div class="file-icon ${fileType}">${fileIcon}</div>
+              <div class="file-info">
+                <div class="file-name">${file.name}</div>
+                <div class="file-meta">${formatFileSize(file.size)} • ${file.uploadTime}</div>
+              </div>
+              <input type="checkbox" ${isSelected ? 'checked' : ''} 
+                     onchange="toggleFileSelection('${file.id}')" 
+                     style="margin-right: 8px;">
+            </div>
+            
+            ${preview}
+            
+            <div class="file-actions">
+              <button class="btn btn-small" onclick="downloadFile('${file.id}')">
+                ⬇️ تحميل
+              </button>
+              <button class="btn btn-small" onclick="viewFile('${file.id}')">
+                👁️ عرض
+              </button>
+              <button class="btn danger btn-small" onclick="deleteFileConfirm('${file.id}')">
+                🗑️ حذف
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      container.innerHTML = fileCards;
+    }
+    
+    // تحديد/إلغاء تحديد ملف
+    function toggleFileSelection(fileId) {
+      if (selectedFiles.has(fileId)) {
+        selectedFiles.delete(fileId);
+      } else {
+        selectedFiles.add(fileId);
+      }
+      displayFiles();
+    }
+    
+    // تحديد جميع الملفات
+    function selectAll() {
+      if (selectedFiles.size === filteredFiles.length) {
+        selectedFiles.clear();
+      } else {
+        selectedFiles.clear();
+        filteredFiles.forEach(file => selectedFiles.add(file.id));
+      }
+      displayFiles();
+    }
+    
+    // تحميل ملف
+    async function downloadFile(fileId) {
+      try {
+        const file = allFiles.find(f => f.id === fileId);
+        if (!file) {
+          showMessage('❌ الملف غير موجود', 'error');
+          return;
+        }
+        
+        const a = document.createElement('a');
+        a.href = file.data;
+        a.download = file.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        showMessage(`⬇️ تم تحميل ${file.name}`, 'success');
+      } catch (error) {
+        showMessage('❌ فشل تحميل الملف', 'error');
+      }
+    }
+    
+    // عرض ملف
+    async function viewFile(fileId) {
+      try {
+        const file = allFiles.find(f => f.id === fileId);
+        if (!file) {
+          showMessage('❌ الملف غير موجود', 'error');
+          return;
+        }
+        
+        const newWindow = window.open();
+        const fileType = getFileType(file.type);
+        
+        if (fileType === 'image') {
+          newWindow.document.write(`
+            <html dir="rtl">
+              <head><title>${file.name}</title></head>
+              <body style="margin: 0; background: #000; display: flex; align-items: center; justify-content: center; min-height: 100vh;">
+                <img src="${file.data}" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="${file.name}">
+              </body>
+            </html>
+          `);
+        } else {
+          newWindow.location.href = file.data;
+        }
+      } catch (error) {
+        showMessage('❌ فشل عرض الملف', 'error');
+      }
+    }
+    
+    // تأكيد حذف ملف
+    function deleteFileConfirm(fileId) {
+      const file = allFiles.find(f => f.id === fileId);
+      if (!file) return;
+      
+      if (confirm(`🗑️ هل أنت متأكد من حذف ${file.name}؟`)) {
+        deleteFileById(fileId);
+      }
+    }
+    
+    // حذف ملف بالمعرف
+    async function deleteFileById(fileId) {
+      try {
+        await deleteFile(fileId);
+        await loadFiles();
+        showMessage('✅ تم حذف الملف بنجاح', 'success');
+      } catch (error) {
+        showMessage('❌ فشل حذف الملف', 'error');
+      }
+    }
+    
+    // حذف الملفات المحددة
+    async function deleteSelected() {
+      if (selectedFiles.size === 0) {
+        showMessage('⚠️ لم يتم تحديد أي ملفات', 'error');
+        return;
+      }
+      
+      if (!confirm(`🗑️ هل أنت متأكد من حذف ${selectedFiles.size} ملف؟`)) {
+        return;
+      }
+      
+      try {
+        for (const fileId of selectedFiles) {
+          await deleteFile(fileId);
+        }
+        selectedFiles.clear();
+        await loadFiles();
+        showMessage(`✅ تم حذف الملفات بنجاح`, 'success');
+      } catch (error) {
+        showMessage('❌ فشل حذف بعض الملفات', 'error');
+      }
+    }
+    
+    // تحديث قائمة الملفات
+    async function refreshFiles() {
+      await loadFiles();
+      showMessage('🔄 تم تحديث قائمة الملفات', 'info');
+    }
+    
+    // تحميل الملفات من قاعدة البيانات
+    async function loadFiles() {
+      try {
+        allFiles = await getAllFiles();
+        filteredFiles = [...allFiles];
+        updateStats();
+        filterFiles(currentFilter);
+      } catch (error) {
+        showMessage('❌ خطأ في تحميل الملفات', 'error');
+      }
+    }
+    
+    // تهيئة التطبيق
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        await initDB();
+        await loadFiles();
+        showMessage('✅ مستعرض الملفات جاهز', 'success');
+      } catch (error) {
+        showMessage('❌ خطأ في تهيئة التطبيق', 'error');
+        console.error('App initialization error:', error);
+      }
+    });
+  </script>
 </body>
 </html>
