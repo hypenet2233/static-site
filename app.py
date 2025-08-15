@@ -1,20 +1,17 @@
-from flask import Flask, request
 import os
+from flask import Flask, send_from_directory
 
-app = Flask(__name__)
-UPLOAD_FOLDER = 'uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app = Flask(__name__, static_folder=".", static_url_path="")
 
-@app.route('/upload', methods=['POST'])
-def upload():
-    if 'file' not in request.files:
-        return 'لا يوجد ملف', 400
-    file = request.files['file']
-    if file.filename == '':
-        return 'اسم الملف فارغ', 400
-    path = os.path.join(UPLOAD_FOLDER, file.filename)
-    file.save(path)
-    return f'تم رفع الملف: {file.filename}'
+@app.route("/")
+def home():
+    return send_from_directory(".", "index.html")
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# باقي المسارات تخليها إذا تحتاج
+@app.route("/<path:path>")
+def static_files(path):
+    return send_from_directory(".", path)
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
