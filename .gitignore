@@ -250,3 +250,11 @@
 *.env
 *.key
 *.pem
+ 
+# Ignore local archives and uploads 
+uploads/* 
+!uploads/README.md 
+ 
+# Processing outputs 
+processing/output/ 
+processing/cache/ 
