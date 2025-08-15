@@ -270,8 +270,7 @@
         <div class="stat-item">
           <div class="stat-number" id="total-files">0</div>
           <div class="stat-label">إجمالي الملفات</div>
-          <div class="filter-tab" onclick="filterFiles('other')">📁 أخرى</div>
-      </div>
+        </div>
         <div class="stat-item">
           <div class="stat-number" id="total-size">0</div>
           <div class="stat-label">الحجم الإجمالي</div>
@@ -298,23 +297,26 @@
       
       <!-- تبويبات الفلتر -->
       <div class="filter-tabs">
-        <div class="filter-tab active" onclick="filterFiles('all')">الكل</div>
-        <div class="filter-tab" onclick="filterFiles('image')">🖼️ الصور</div>
-        <div class="filter-tab" onclick="filterFiles('document')">📄 المستندات</div>
-        <div class="filter-tab" onclick="filterFiles('audio')">🎵 الصوتيات</div>
-        <div class="filter-tab" onclick="filterFiles('video')">🎬 الفيديو</div>
-        <div class="filter-tab" onclick="filterFiles('archive')">📦 الأرشيف</div>
+        <div class="filter-tab active" onclick="filterFiles('all', this)">الكل</div>
+        <div class="filter-tab" onclick="filterFiles('image', this)">🖼️ الصور</div>
+        <div class="filter-tab" onclick="filterFiles('document', this)">📄 المستندات</div>
+        <div class="filter-tab" onclick="filterFiles('audio', this)">🎵 الصوتيات</div>
+        <div class="filter-tab" onclick="filterFiles('video', this)">🎬 الفيديو</div>
+        <div class="filter-tab" onclick="filterFiles('archive', this)">📦 الأرشيف</div>
+        <div class="filter-tab" onclick="filterFiles('other', this)">📁 أخرى</div>
       </div>
       
       <!-- منطقة الملفات -->
       <div class="files-section">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
           <h3>الملفات المحفوظة</h3>
-          <div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button class="btn btn-small" onclick="refreshFiles()">🔄 تحديث</button>
             <button class="btn success btn-small" onclick="selectAll()">✅ تحديد الكل</button>
             <button class="btn danger btn-small" onclick="deleteSelected()">🗑️ حذف المحدد</button>
             <button class="btn warning btn-small" onclick="testExtractAll()">📦 اختبار فك الضغط</button>
+            <button class="btn success btn-small" onclick="testSaveFirst()">💾 اختبار الحفظ</button>
+            <button class="btn success btn-small" onclick="saveAllExtracted()">💾 حفظ الكل</button>
           </div>
         </div>
         
@@ -376,6 +378,17 @@
         request.onerror = () => reject(request.error);
       });
     }
+
+    // حفظ ملف في قاعدة البيانات
+    function saveFile(fileData) {
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.put(fileData); // put will add or update
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
     
     // حذف ملف
     function deleteFile(id) {
@@ -391,34 +404,20 @@
     
     // تحديد نوع الملف (مُحسن للتعرف على الملفات المضغوطة)
     function getFileType(mimeType, fileName) {
-      // فحص شامل للملفات المضغوطة
       const archiveExtensions = ['.zip', '.rar', '.7z', '.tar', '.gz', '.bz2'];
       const lowerFileName = fileName ? fileName.toLowerCase() : '';
       
-      for (const ext of archiveExtensions) {
-        if (lowerFileName.endsWith(ext)) {
-          console.log('Archive detected by extension:', fileName, ext);
-          return 'archive';
-        }
-      }
-      
-      // فحص نوع MIME
-      if (mimeType && (
-          mimeType.includes('zip') || 
-          mimeType.includes('rar') || 
-          mimeType.includes('archive') ||
-          mimeType.includes('compressed')
-      )) {
-        console.log('Archive detected by MIME:', fileName, mimeType);
+      if (archiveExtensions.some(ext => lowerFileName.endsWith(ext))) {
         return 'archive';
       }
       
-      if (mimeType && mimeType.startsWith('image/')) return 'image';
-      if (mimeType && mimeType.startsWith('video/')) return 'video';
-      if (mimeType && mimeType.startsWith('audio/')) return 'audio';
-      if (mimeType && (mimeType.includes('pdf') || mimeType.includes('document') || 
-          mimeType.includes('text') || mimeType.includes('sheet') ||
-          mimeType.includes('presentation'))) return 'document';
+      if (mimeType) {
+        if (mimeType.startsWith('image/')) return 'image';
+        if (mimeType.startsWith('video/')) return 'video';
+        if (mimeType.startsWith('audio/')) return 'audio';
+        if (mimeType.includes('pdf') || mimeType.includes('document') || mimeType.includes('text') || mimeType.includes('sheet') || mimeType.includes('presentation')) return 'document';
+        if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('archive') || mimeType.includes('compressed')) return 'archive';
+      }
       
       return 'other';
     }
@@ -439,12 +438,8 @@
     // فك ضغط الملفات وعرض المحتويات (محسن مع تحميل JSZip)
     async function extractArchive(fileId) {
       try {
-        // التحقق من وجود JSZip
         if (typeof JSZip === 'undefined') {
-          console.log('⏳ تحميل مكتبة JSZip...');
           showMessage('⏳ جاري تحميل مكتبة فك الضغط...', 'info');
-          
-          // تحميل JSZip ديناميكياً
           await loadJSZip();
         }
         
@@ -454,76 +449,30 @@
           return;
         }
         
-        console.log('🔍 بدء فك ضغط الملف:', file.name);
-        console.log('📊 نوع الملف:', file.type);
-        console.log('📏 حجم الملف:', file.size);
-        
         showMessage('📦 جاري فك ضغط الملف...', 'info');
         
-        // تحضير البيانات
-        let base64Data;
-        if (file.data.includes('data:')) {
-          base64Data = file.data.split(',')[1];
-        } else {
-          base64Data = file.data;
-        }
+        const base64Data = file.data.split(',')[1] || file.data;
         
-        console.log('📝 حجم البيانات المُكودة:', base64Data.length);
+        const zip = await JSZip.loadAsync(base64Data, { base64: true });
         
-        // تحويل إلى binary
-        let binaryString;
-        try {
-          binaryString = atob(base64Data);
-        } catch (e) {
-          throw new Error('فشل في فك تشفير البيانات: ' + e.message);
-        }
-        
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        
-        console.log('🔄 تم تحضير البيانات، الحجم:', bytes.length);
-        
-        // محاولة فك الضغط
-        let zip;
-        try {
-          zip = await JSZip.loadAsync(bytes);
-          console.log('✅ تم تحميل الأرشيف بنجاح');
-        } catch (e) {
-          throw new Error('فشل في تحميل الأرشيف: ' + e.message);
-        }
-        
-        // استخراج الملفات
         const extractedFiles = [];
-        const fileList = Object.entries(zip.files);
-        console.log('📂 عدد العناصر في الأرشيف:', fileList.length);
-        
-        for (const [filename, fileObj] of fileList) {
+        for (const [filename, fileObj] of Object.entries(zip.files)) {
           if (!fileObj.dir) {
             try {
-              // محاولة قراءة كنص
               const content = await fileObj.async('text');
-              extractedFiles.push({
-                name: filename,
-                content: content,
-                size: content.length
-              });
-              console.log('📄 تم استخراج:', filename, 'حجم:', content.length);
+              extractedFiles.push({ name: filename, content: content, size: content.length });
             } catch (e) {
-              console.warn('⚠️ فشل استخراج الملف كنص:', filename, e.message);
-              // محاولة كـ binary للملفات غير النصية
+              console.warn(`⚠️ فشل استخراج الملف كنص: ${filename}`, e.message);
               try {
                 const binaryContent = await fileObj.async('uint8array');
                 extractedFiles.push({
                   name: filename,
-                  content: '[ملف ثنائي - ' + binaryContent.length + ' بايت]',
+                  content: `[ملف ثنائي - ${binaryContent.length} بايت]`,
                   size: binaryContent.length,
                   isBinary: true
                 });
-                console.log('📦 تم استخراج كملف ثنائي:', filename);
               } catch (e2) {
-                console.error('❌ فشل استخراج:', filename, e2.message);
+                console.error(`❌ فشل استخراج: ${filename}`, e2.message);
               }
             }
           }
@@ -534,15 +483,12 @@
           return;
         }
         
-        console.log('🎉 تم استخراج', extractedFiles.length, 'ملف');
-        
-        // عرض قائمة الملفات المستخرجة
         displayExtractedFiles(file, extractedFiles);
         showMessage(`✅ تم استخراج ${extractedFiles.length} ملف من الأرشيف`, 'success');
         
       } catch (error) {
         console.error('💥 خطأ في فك الضغط:', error);
-        showMessage('❌ فشل في فك ضغط الملف: ' + error.message, 'error');
+        showMessage(`❌ فشل في فك ضغط الملف: ${error.message}`, 'error');
       }
     }
     
@@ -573,252 +519,147 @@
       const archiveCard = document.querySelector(`[data-file-id="${archiveFile.id}"]`);
       if (!archiveCard) return;
       
-      // إزالة المحتوى السابق إذا كان موجوداً
-      const existingContent = archiveCard.querySelector('.archive-content');
-      if (existingContent) {
-        existingContent.remove();
+      let contentDiv = archiveCard.querySelector('.archive-content');
+      if (contentDiv) {
+        contentDiv.remove();
       }
       
-      // إنشاء محتوى جديد
-      const contentDiv = document.createElement('div');
+      contentDiv = document.createElement('div');
       contentDiv.className = 'archive-content';
-      
+      contentDiv.style.cssText = 'margin-top: 12px; border-top: 1px solid rgba(255,255,255,.1); padding-top: 12px;';
+
       extractedFiles.forEach(file => {
         const fileDiv = document.createElement('div');
-        fileDiv.className = 'archive-file';
+        fileDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 4px 0;';
         
         fileDiv.innerHTML = `
-          <span class="archive-file-name">📄 ${file.name}</span>
-          <span class="archive-file-size">${formatFileSize(file.size)}</span>
-          <button class="archive-file-extract" onclick="saveExtractedFile('${archiveFile.id}', '${file.name}')">
-            💾 حفظ
-          </button>
-          <button class="archive-file-extract" onclick="viewExtractedFile('${archiveFile.id}', '${file.name}')" style="background: #10b981;">
-            👁️ عرض
-          </button>
+          <span style="word-break: break-all;">📄 ${file.name} (${formatFileSize(file.size)})</span>
+          <div style="display: flex; gap: 4px;">
+            <button class="btn btn-small" style="padding: 4px 8px;" onclick="saveExtractedFile('${archiveFile.id}', '${encodeURIComponent(file.name)}')">💾</button>
+            <button class="btn btn-small" style="padding: 4px 8px; background: var(--accent);" onclick="viewExtractedFile('${archiveFile.id}', '${encodeURIComponent(file.name)}')">👁️</button>
+          </div>
         `;
         
         contentDiv.appendChild(fileDiv);
       });
       
-      // إدراج المحتوى في كارت الملف
       archiveCard.appendChild(contentDiv);
       
-      // حفظ الملفات المستخرجة في الذاكرة المؤقتة
       if (!window.extractedFilesCache) {
         window.extractedFilesCache = {};
       }
       window.extractedFilesCache[archiveFile.id] = extractedFiles;
     }
     
-    // حفظ ملف مستخرج كملف جديد
-    async function saveExtractedFile(archiveId, fileName) {
+    // حفظ ملف مستخرج كملف جديد (محسن)
+    async function saveExtractedFile(archiveId, encodedFileName) {
       try {
-        const extractedFiles = window.extractedFilesCache[archiveId];
+        const fileName = decodeURIComponent(encodedFileName);
+        const extractedFiles = window.extractedFilesCache?.[archiveId];
         if (!extractedFiles) {
-          showMessage('❌ لم يتم العثور على الملفات المستخرجة', 'error');
-          return;
+          throw new Error('لم يتم العثور على الملفات المستخرجة في الذاكرة المؤقتة');
         }
         
         const file = extractedFiles.find(f => f.name === fileName);
         if (!file) {
-          showMessage('❌ لم يتم العثور على الملف', 'error');
-          return;
+          throw new Error('لم يتم العثور على الملف المحدد');
         }
         
-        // تحديد نوع الملف ومحتواه
         let mimeType = 'text/plain';
-        let processedContent = file.content;
+        if (fileName.toLowerCase().endsWith('.json')) mimeType = 'application/json';
         
-        if (fileName.endsWith('.json')) {
-          mimeType = 'application/json';
-          // تنسيق JSON إذا كان صالحاً
-          try {
-            const jsonData = JSON.parse(file.content);
-            processedContent = JSON.stringify(jsonData, null, 2);
-          } catch (e) {
-            // إذا لم يكن JSON صالح، احتفظ بالمحتوى الأصلي
-          }
-        } else if (fileName.endsWith('.txt')) {
-          mimeType = 'text/plain';
-        }
+        const base64Content = btoa(unescape(encodeURIComponent(file.content)));
+        const dataUrl = `data:${mimeType};charset=utf-8;base64,${base64Content}`;
         
-        // تحويل المحتوى إلى base64
-        const base64Content = btoa(unescape(encodeURIComponent(processedContent)));
-        const dataUrl = `data:${mimeType};base64,${base64Content}`;
-        
-        // إنشاء بيانات الملف الجديد
+        const timestamp = Date.now();
         const newFileData = {
-          id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-          name: fileName,
-          size: new Blob([processedContent]).size,
+          id: `${timestamp}_${Math.random().toString(36).substr(2, 9)}`,
+          name: `extracted_${fileName}`,
+          size: new Blob([file.content]).size,
           type: mimeType,
           data: dataUrl,
           uploadTime: new Date().toLocaleString('ar-SA'),
-          timestamp: Date.now(),
-          extractedFrom: archiveId
+          timestamp: timestamp,
         };
         
-        // حفظ الملف في قاعدة البيانات
         await saveFile(newFileData);
-        
-        // تحديث العرض
-        await loadFiles();
+        await refreshFiles();
         
         showMessage(`✅ تم حفظ ${fileName} بنجاح`, 'success');
         
+        setTimeout(() => {
+          const newFileCard = document.querySelector(`[data-file-id="${newFileData.id}"]`);
+          if (newFileCard) {
+            newFileCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            newFileCard.style.border = '2px solid var(--accent)';
+            setTimeout(() => { newFileCard.style.border = ''; }, 3000);
+          }
+        }, 500);
+        
       } catch (error) {
-        console.error('Error saving extracted file:', error);
-        showMessage('❌ فشل في حفظ الملف', 'error');
+        console.error('💥 خطأ في حفظ الملف:', error);
+        showMessage(`❌ فشل في حفظ الملف: ${error.message}`, 'error');
       }
     }
     
     // عرض ملف مستخرج
-    function viewExtractedFile(archiveId, fileName) {
+    function viewExtractedFile(archiveId, encodedFileName) {
       try {
-        const extractedFiles = window.extractedFilesCache[archiveId];
-        if (!extractedFiles) {
-          showMessage('❌ لم يتم العثور على الملفات المستخرجة', 'error');
-          return;
-        }
-        
-        const file = extractedFiles.find(f => f.name === fileName);
+        const fileName = decodeURIComponent(encodedFileName);
+        const file = window.extractedFilesCache?.[archiveId]?.find(f => f.name === fileName);
+
         if (!file) {
-          showMessage('❌ لم يتم العثور على الملف', 'error');
-          return;
+          throw new Error('لم يتم العثور على الملف لعرضه');
         }
         
-        // فتح نافذة جديدة لعرض المحتوى
         const newWindow = window.open('', '_blank');
         newWindow.document.write(`
-          <html dir="rtl">
+          <html>
             <head>
               <title>${fileName}</title>
               <meta charset="utf-8">
               <style>
-                body {
-                  font-family: 'Courier New', monospace;
-                  background: #1e293b;
-                  color: #e2e8f0;
-                  padding: 20px;
-                  margin: 0;
-                  line-height: 1.6;
-                }
-                .header {
-                  background: #334155;
-                  padding: 15px;
-                  border-radius: 8px;
-                  margin-bottom: 20px;
-                  border-left: 4px solid #3b82f6;
-                }
-                .content {
-                  background: #0f172a;
-                  padding: 20px;
-                  border-radius: 8px;
-                  white-space: pre-wrap;
-                  max-height: 80vh;
-                  overflow-y: auto;
-                  border: 1px solid #374151;
-                }
+                body { font-family: monospace; background: #0f172a; color: #e2e8f0; padding: 20px; }
+                pre { white-space: pre-wrap; word-wrap: break-word; }
                 .json-key { color: #60a5fa; }
                 .json-string { color: #34d399; }
                 .json-number { color: #fbbf24; }
                 .json-boolean { color: #f87171; }
-                h1, h2, h3 { color: #60a5fa; }
-                .stats { color: #10b981; }
-                .section { border-left: 3px solid #3b82f6; padding-left: 10px; margin: 10px 0; }
               </style>
             </head>
-            <body>
-              <div class="header">
-                <h2>📄 ${fileName}</h2>
-                <p>الحجم: ${formatFileSize(file.content.length)} | مستخرج من أرشيف</p>
-              </div>
-              <div class="content">${formatFileContent(file.content, fileName)}</div>
-            </body>
+            <body><pre>${formatFileContent(file.content, fileName)}</pre></body>
           </html>
         `);
         newWindow.document.close();
         
       } catch (error) {
-        console.error('Error viewing extracted file:', error);
-        showMessage('❌ فشل في عرض الملف', 'error');
+        showMessage(`❌ فشل في عرض الملف: ${error.message}`, 'error');
       }
     }
     
     // تنسيق محتوى الملف حسب نوعه
     function formatFileContent(content, fileName) {
-      if (fileName.endsWith('.json')) {
+      const escapedContent = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      if (fileName.toLowerCase().endsWith('.json')) {
         try {
           const jsonData = JSON.parse(content);
-          return syntaxHighlightJson(jsonData);
+          const highlighted = JSON.stringify(jsonData, null, 2)
+            .replace(/</g, "&lt;").replace(/>/g, "&gt;")
+            .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match) => {
+              let cls = 'json-number';
+              if (/^"/.test(match)) {
+                cls = /:$/.test(match) ? 'json-key' : 'json-string';
+              } else if (/true|false/.test(match)) {
+                cls = 'json-boolean';
+              }
+              return `<span class="${cls}">${match}</span>`;
+            });
+          return highlighted;
         } catch (e) {
-          return escapeHtml(content);
+          return escapedContent;
         }
-      } else if (fileName.endsWith('.txt')) {
-        // تنسيق خاص للتقارير النصية
-        if (content.includes('📊 تقرير تحليل رسائل قروب')) {
-          return formatReportContent(content);
-        }
-        return escapeHtml(content);
       }
-      return escapeHtml(content);
-    }
-    
-    // تمييز صيغة JSON
-    function syntaxHighlightJson(obj) {
-      const json = JSON.stringify(obj, null, 2);
-      return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-        let cls = 'json-number';
-        if (/^"/.test(match)) {
-          if (/:$/.test(match)) {
-            cls = 'json-key';
-          } else {
-            cls = 'json-string';
-          }
-        } else if (/true|false/.test(match)) {
-          cls = 'json-boolean';
-        } else if (/null/.test(match)) {
-          cls = 'json-boolean';
-        }
-        return '<span class="' + cls + '">' + match + '</span>';
-      });
-    }
-    
-    // تنسيق محتوى التقارير
-    function formatReportContent(content) {
-      return content
-        .replace(/📊 تقرير تحليل رسائل قروب:(.+)/g, '<h1>📊 تقرير تحليل رسائل قروب:$1</h1>')
-        .replace(/================================================================================/g, '<hr style="border: 1px solid #374151;">')
-        .replace(/📅 تاريخ الاستخراج:(.+)/g, '<div class="stats">📅 تاريخ الاستخراج:$1</div>')
-        .replace(/📈 إجمالي الرسائل:(.+)/g, '<div class="stats">📈 إجمالي الرسائل:$1</div>')
-        .replace(/✨ رسائل تم تحليلها بالذكاء الاصطناعي:(.+)/g, '<div class="stats">✨ رسائل تم تحليلها بالذكاء الاصطناعي:$1</div>')
-        .replace(/📱 رسائل تحتوي على أرقام:(.+)/g, '<div class="stats">📱 رسائل تحتوي على أرقام:$1</div>')
-        .replace(/💰 رسائل تحتوي على أسعار:(.+)/g, '<div class="stats">💰 رسائل تحتوي على أسعار:$1</div>')
-        .replace(/🔍 رسائل مطلوب:(.+)/g, '<div class="stats">🔍 رسائل مطلوب:$1</div>')
-        .replace(/🏠 رسائل معروض:(.+)/g, '<div class="stats">🏠 رسائل معروض:$1</div>')
-        .replace(/📋 ملخص البيانات المستخرجة:/g, '<h2>📋 ملخص البيانات المستخرجة:</h2>')
-        .replace(/📝 تفاصيل الرسائل:/g, '<h2>📝 تفاصيل الرسائل:</h2>')
-        .replace(/رسالة رقم (\d+):/g, '<h3 class="section">رسالة رقم $1:</h3>')
-        .replace(/👤 المرسل:(.+)/g, '<div>👤 المرسل:$1</div>')
-        .replace(/📱 رقم المرسل:(.+)/g, '<div>📱 رقم المرسل:$1</div>')
-        .replace(/🏷️ نوع الرسالة:(.+)/g, '<div>🏷️ نوع الرسالة:$1</div>')
-        .replace(/🧠 تم تحليلها بالذكاء الاصطناعي:(.+)/g, '<div>🧠 تم تحليلها بالذكاء الاصطناعي:$1</div>')
-        .replace(/📞 أرقام إضافية:(.+)/g, '<div>📞 أرقام إضافية:$1</div>')
-        .replace(/💰 الأسعار:(.+)/g, '<div>💰 الأسعار:$1</div>')
-        .replace(/🗺️ المناطق:(.+)/g, '<div>🗺️ المناطق:$1</div>')
-        .replace(/🏠 نوع العقار:(.+)/g, '<div>🏠 نوع العقار:$1</div>')
-        .replace(/📄 نص الرسالة:/g, '<div style="margin-top: 10px;"><strong>📄 نص الرسالة:</strong></div>')
-        .replace(/==================================================/g, '<hr style="border: 1px dashed #374151; margin: 20px 0;">')
-        .replace(/------------------------------------------/g, '<hr style="border: 1px dotted #374151; margin: 15px 0;">')
-        .replace(/•(.+)/g, '<div style="margin-left: 20px;">•$1</div>');
-    }
-    
-    // هروب HTML
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
+      return escapedContent;
     }
     
     // تنسيق حجم الملف
@@ -854,41 +695,41 @@
     }
     
     // فلترة الملفات
-    function filterFiles(type) {
+    function filterFiles(type, element) {
       currentFilter = type;
       
-      // تحديث التبويبات
-      document.querySelectorAll('.filter-tab').forEach(tab => {
-        tab.classList.remove('active');
-      });
-      event.target.classList.add('active');
-      
-      // فلترة الملفات
-      if (type === 'all') {
-        filteredFiles = [...allFiles];
+      document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+      if (element) {
+        element.classList.add('active');
       } else {
-        filteredFiles = allFiles.filter(file => getFileType(file.type, file.name) === type);
+        // Fallback for initial load
+        document.querySelector(`.filter-tab[onclick*="'${type}'"]`).classList.add('active');
       }
       
-      displayFiles();
+      applySearchAndFilter();
     }
     
     // البحث في الملفات
     function searchFiles() {
-      const searchTerm = document.getElementById('search-input').value.toLowerCase();
-      
-      let baseFiles = currentFilter === 'all' ? allFiles : 
-                     allFiles.filter(file => getFileType(file.type, file.name) === currentFilter);
-      
-      if (searchTerm) {
-        filteredFiles = baseFiles.filter(file => 
-          file.name.toLowerCase().includes(searchTerm)
-        );
-      } else {
-        filteredFiles = [...baseFiles];
-      }
-      
-      displayFiles();
+      applySearchAndFilter();
+    }
+
+    // تطبيق البحث والفلترة معاً
+    function applySearchAndFilter() {
+        const searchTerm = document.getElementById('search-input').value.toLowerCase();
+        
+        let tempFiles = allFiles;
+
+        if (currentFilter !== 'all') {
+            tempFiles = tempFiles.filter(file => getFileType(file.type, file.name) === currentFilter);
+        }
+
+        if (searchTerm) {
+            tempFiles = tempFiles.filter(file => file.name.toLowerCase().includes(searchTerm));
+        }
+
+        filteredFiles = tempFiles;
+        displayFiles();
     }
     
     // عرض الملفات
@@ -897,55 +738,47 @@
       
       if (filteredFiles.length === 0) {
         container.innerHTML = `
-          <div class="empty-state">
+          <div class="empty-state" style="grid-column: 1 / -1;">
             <div class="empty-icon">📂</div>
             <h3>لا توجد ملفات</h3>
-            <p>لا توجد ملفات تطابق المعايير المحددة</p>
-            <a href="page1.html" class="btn primary">رفع ملفات جديدة</a>
+            <p>لا توجد ملفات تطابق المعايير المحددة. حاول تغيير الفلتر أو مصطلح البحث.</p>
+            <a href="index.html" class="btn primary">رفع ملفات جديدة</a>
           </div>
         `;
         return;
       }
       
       const fileCards = filteredFiles.map(file => {
-        const fileType = getFileType(file.type);
+        const fileType = getFileType(file.type, file.name);
         const fileIcon = getFileIcon(fileType);
         const isSelected = selectedFiles.has(file.id);
         
         let preview = '';
-        if (fileType === 'image') {
-          preview = `
-            <div class="file-preview">
-              <img src="${file.data}" alt="${file.name}" onclick="viewFile('${file.id}')">
-            </div>
-          `;
+        if (fileType === 'image' && file.data) {
+          preview = `<div class="file-preview"><img src="${file.data}" alt="${file.name}" onclick="viewFile('${file.id}')" loading="lazy"></div>`;
         }
         
+        let archiveButton = '';
+        if (fileType === 'archive') {
+            archiveButton = `<button class="btn btn-small" onclick="extractArchive('${file.id}')">📦 فك الضغط</button>`;
+        }
+
         return `
-          <div class="file-card ${isSelected ? 'selected' : ''}" data-file-id="${file.id}">
+          <div class="file-card ${isSelected ? 'selected' : ''}" data-file-id="${file.id}" style="border: ${isSelected ? '2px solid var(--accent-2)' : '1px solid rgba(255,255,255,.08)'};">
             <div class="file-header">
               <div class="file-icon ${fileType}">${fileIcon}</div>
               <div class="file-info">
-                <div class="file-name">${file.name}</div>
+                <div class="file-name" title="${file.name}">${file.name}</div>
                 <div class="file-meta">${formatFileSize(file.size)} • ${file.uploadTime}</div>
               </div>
-              <input type="checkbox" ${isSelected ? 'checked' : ''} 
-                     onchange="toggleFileSelection('${file.id}')" 
-                     style="margin-right: 8px;">
+              <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleFileSelection('${file.id}', this)" style="margin-right: 8px; width: 18px; height: 18px; cursor: pointer;">
             </div>
-            
             ${preview}
-            
             <div class="file-actions">
-              <button class="btn btn-small" onclick="downloadFile('${file.id}')">
-                ⬇️ تحميل
-              </button>
-              <button class="btn btn-small" onclick="viewFile('${file.id}')">
-                👁️ عرض
-              </button>
-              <button class="btn danger btn-small" onclick="deleteFileConfirm('${file.id}')">
-                🗑️ حذف
-              </button>
+              <button class="btn btn-small" onclick="downloadFile('${file.id}')">⬇️ تحميل</button>
+              <button class="btn btn-small" onclick="viewFile('${file.id}')">👁️ عرض</button>
+              ${archiveButton}
+              <button class="btn danger btn-small" onclick="deleteFileConfirm('${file.id}')">🗑️ حذف</button>
             </div>
           </div>
         `;
@@ -955,74 +788,64 @@
     }
     
     // تحديد/إلغاء تحديد ملف
-    function toggleFileSelection(fileId) {
-      if (selectedFiles.has(fileId)) {
-        selectedFiles.delete(fileId);
-      } else {
+    function toggleFileSelection(fileId, checkbox) {
+      const card = checkbox.closest('.file-card');
+      if (checkbox.checked) {
         selectedFiles.add(fileId);
+        card.style.border = '2px solid var(--accent-2)';
+      } else {
+        selectedFiles.delete(fileId);
+        card.style.border = '1px solid rgba(255,255,255,.08)';
       }
-      displayFiles();
     }
     
     // تحديد جميع الملفات
     function selectAll() {
-      if (selectedFiles.size === filteredFiles.length) {
-        selectedFiles.clear();
-      } else {
-        selectedFiles.clear();
-        filteredFiles.forEach(file => selectedFiles.add(file.id));
-      }
+      const allVisibleSelected = filteredFiles.every(file => selectedFiles.has(file.id));
+      
+      filteredFiles.forEach(file => {
+        if (allVisibleSelected) {
+          selectedFiles.delete(file.id);
+        } else {
+          selectedFiles.add(file.id);
+        }
+      });
       displayFiles();
     }
     
     // تحميل ملف
-    async function downloadFile(fileId) {
-      try {
-        const file = allFiles.find(f => f.id === fileId);
-        if (!file) {
-          showMessage('❌ الملف غير موجود', 'error');
-          return;
-        }
-        
-        const a = document.createElement('a');
-        a.href = file.data;
-        a.download = file.name;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        
-        showMessage(`⬇️ تم تحميل ${file.name}`, 'success');
-      } catch (error) {
-        showMessage('❌ فشل تحميل الملف', 'error');
+    function downloadFile(fileId) {
+      const file = allFiles.find(f => f.id === fileId);
+      if (!file) {
+        showMessage('❌ الملف غير موجود', 'error');
+        return;
       }
+      
+      const a = document.createElement('a');
+      a.href = file.data;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      showMessage(`⬇️ تم تحميل ${file.name}`, 'success');
     }
     
     // عرض ملف
-    async function viewFile(fileId) {
-      try {
-        const file = allFiles.find(f => f.id === fileId);
-        if (!file) {
-          showMessage('❌ الملف غير موجود', 'error');
-          return;
-        }
-        
-        const newWindow = window.open();
-        const fileType = getFileType(file.type);
-        
-        if (fileType === 'image') {
-          newWindow.document.write(`
-            <html dir="rtl">
-              <head><title>${file.name}</title></head>
-              <body style="margin: 0; background: #000; display: flex; align-items: center; justify-content: center; min-height: 100vh;">
-                <img src="${file.data}" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="${file.name}">
-              </body>
-            </html>
-          `);
-        } else {
-          newWindow.location.href = file.data;
-        }
-      } catch (error) {
-        showMessage('❌ فشل عرض الملف', 'error');
+    function viewFile(fileId) {
+      const file = allFiles.find(f => f.id === fileId);
+      if (!file) {
+        showMessage('❌ الملف غير موجود', 'error');
+        return;
+      }
+      
+      const newWindow = window.open();
+      const fileType = getFileType(file.type, file.name);
+      
+      if (fileType === 'image') {
+        newWindow.document.write(`<body style="margin:0; background:#000;"><img src="${file.data}" style="width:100%;"></body>`);
+      } else {
+        newWindow.location.href = file.data;
       }
     }
     
@@ -1040,7 +863,8 @@
     async function deleteFileById(fileId) {
       try {
         await deleteFile(fileId);
-        await loadFiles();
+        selectedFiles.delete(fileId);
+        await refreshFiles();
         showMessage('✅ تم حذف الملف بنجاح', 'success');
       } catch (error) {
         showMessage('❌ فشل حذف الملف', 'error');
@@ -1049,27 +873,66 @@
     
     // اختبار فك ضغط جميع الملفات المضغوطة
     function testExtractAll() {
-      console.log('🔍 البحث عن ملفات مضغوطة...');
-      
-      const zipFiles = allFiles.filter(file => 
-        file.name.toLowerCase().includes('.zip') ||
-        file.name.toLowerCase().endsWith('.zip') ||
-        getFileType(file.type, file.name) === 'archive'
-      );
-      
-      console.log('📦 تم العثور على ملفات مضغوطة:', zipFiles.length);
-      zipFiles.forEach(file => {
-        console.log('📄', file.name, 'نوع:', file.type);
-      });
+      const zipFiles = allFiles.filter(file => getFileType(file.type, file.name) === 'archive');
       
       if (zipFiles.length === 0) {
         showMessage('⚠️ لا توجد ملفات مضغوطة', 'error');
         return;
       }
       
-      // فك ضغط أول ملف مضغوط
-      extractArchive(zipFiles[0].id);
+      showMessage(`🔍 تم العثور على ${zipFiles.length} ملف مضغوط، بدء فك الضغط...`, 'info');
+      
+      zipFiles.forEach((file, index) => {
+        setTimeout(() => {
+          extractArchive(file.id);
+        }, index * 500);
+      });
     }
+
+    // *** دالة جديدة ***
+    // اختبار حفظ أول ملف مستخرج
+    function testSaveFirst() {
+        if (!window.extractedFilesCache || Object.keys(window.extractedFilesCache).length === 0) {
+            showMessage('⚠️ لا توجد ملفات مستخرجة لحفظها. قم بفك ضغط ملف أولاً.', 'error');
+            return;
+        }
+        // الحصول على أول أرشيف وأول ملف فيه
+        const firstArchiveId = Object.keys(window.extractedFilesCache)[0];
+        const firstFile = window.extractedFilesCache[firstArchiveId][0];
+
+        if (firstArchiveId && firstFile) {
+            showMessage('💾 اختبار حفظ أول ملف مستخرج...', 'info');
+            saveExtractedFile(firstArchiveId, encodeURIComponent(firstFile.name));
+        } else {
+            showMessage('❌ لم يتم العثور على ملفات مستخرجة.', 'error');
+        }
+    }
+
+    // *** دالة جديدة ***
+    // حفظ كل الملفات المستخرجة
+    async function saveAllExtracted() {
+        if (!window.extractedFilesCache || Object.keys(window.extractedFilesCache).length === 0) {
+            showMessage('⚠️ لا توجد ملفات مستخرجة لحفظها. قم بفك ضغط ملف أولاً.', 'error');
+            return;
+        }
+
+        showMessage('💾 جاري حفظ جميع الملفات المستخرجة...', 'info');
+        let savedCount = 0;
+        try {
+            for (const archiveId in window.extractedFilesCache) {
+                const filesToSave = window.extractedFilesCache[archiveId];
+                for (const file of filesToSave) {
+                    await saveExtractedFile(archiveId, encodeURIComponent(file.name));
+                    savedCount++;
+                }
+            }
+            showMessage(`✅ تم حفظ ${savedCount} ملف بنجاح.`, 'success');
+        } catch(error) {
+            showMessage(`❌ حدث خطأ أثناء حفظ الملفات: ${error.message}`, 'error');
+        }
+    }
+
+    // حذف الملفات المحددة
     async function deleteSelected() {
       if (selectedFiles.size === 0) {
         showMessage('⚠️ لم يتم تحديد أي ملفات', 'error');
@@ -1084,9 +947,10 @@
         for (const fileId of selectedFiles) {
           await deleteFile(fileId);
         }
+        const count = selectedFiles.size;
         selectedFiles.clear();
-        await loadFiles();
-        showMessage(`✅ تم حذف الملفات بنجاح`, 'success');
+        await refreshFiles();
+        showMessage(`✅ تم حذف ${count} ملف بنجاح`, 'success');
       } catch (error) {
         showMessage('❌ فشل حذف بعض الملفات', 'error');
       }
@@ -1096,25 +960,15 @@
     async function refreshFiles() {
       await loadFiles();
       showMessage('🔄 تم تحديث قائمة الملفات', 'info');
-      
-      // إعادة فحص الملفات المضغوطة
-      setTimeout(() => {
-        allFiles.forEach(file => {
-          const fileType = getFileType(file.type, file.name);
-          if (fileType === 'archive') {
-            console.log('Archive file detected:', file.name);
-          }
-        });
-      }, 1000);
     }
     
     // تحميل الملفات من قاعدة البيانات
     async function loadFiles() {
       try {
         allFiles = await getAllFiles();
-        filteredFiles = [...allFiles];
+        allFiles.sort((a, b) => b.timestamp - a.timestamp); // ترتيب حسب الأحدث
+        applySearchAndFilter();
         updateStats();
-        filterFiles(currentFilter);
       } catch (error) {
         showMessage('❌ خطأ في تحميل الملفات', 'error');
       }
