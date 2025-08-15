@@ -3,58 +3,408 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>الصفحة 3</title>
+<title>صفحة المطابقة بالذكاء الاصطناعي (OpenAI)</title>
 <style>
   :root {
-    --bg: #0f172a;
-    --card: #111827;
-    --text: #e5e7eb;
-    --muted: #9ca3af;
-    --accent: #22c55e;
-    --accent-2: #3b82f6;
-    --btn-bg: #1f2937;
-    --btn-hover: #374151;
-    --shadow: 0 10px 25px rgba(0,0,0,.35);
-    --radius: 18px;
+    --bg: #0f172a; --card: #111827; --text: #e5e7eb; --muted: #9ca3af;
+    --accent: #22c55e; --accent-2: #3b82f6; --btn-bg: #1f2937; --btn-hover: #374151;
+    --shadow: 0 10px 25px rgba(0,0,0,.35); --radius: 18px; --danger: #ef4444;
   }
   * { box-sizing: border-box; }
-  html, body {
-    margin: 0; padding: 0; background: var(--bg); color: var(--text);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Naskh Arabic", Arial, sans-serif;
-  }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Naskh Arabic", Arial, sans-serif; line-height: 1.6; }
   .wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
-  .card {
-    width: min(920px, 96vw); background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
-    border: 1px solid rgba(255,255,255,.08);
-    border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow);
-    backdrop-filter: blur(6px);
-  }
+  .card { width: min(1200px, 96vw); background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+    border: 1px solid rgba(255,255,255,.08); border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow); backdrop-filter: blur(6px); }
   h1 { margin: 0 0 10px; font-size: clamp(26px, 3.5vw, 40px); letter-spacing: .2px; }
   p.lead { margin: 0 0 26px; color: var(--muted); }
-  .grid {
-    display: grid; gap: 14px;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  }
-  a.btn {
-    display: inline-block; text-decoration: none; text-align: center; cursor: pointer;
-    background: var(--btn-bg); color: var(--text); padding: 14px 16px;
-    border-radius: 14px; border: 1px solid rgba(255,255,255,.08);
-    transition: transform .12s ease, background .12s ease, border-color .12s ease;
-    box-shadow: 0 6px 14px rgba(0,0,0,.25);
-  }
-  a.btn:hover { background: var(--btn-hover); transform: translateY(-1px); }
-  a.btn.primary { background: var(--accent-2); border-color: transparent; color: #fff; }
-  footer { margin-top: 18px; color: var(--muted); font-size: 13px; }
+  .btn { display: inline-block; text-decoration: none; text-align: center; cursor: pointer; background: var(--btn-bg); color: var(--text);
+    padding: 14px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,.08);
+    transition: transform .12s ease, background .12s ease, border-color .12s ease; box-shadow: 0 6px 14px rgba(0,0,0,.25); font-family: inherit; font-size: inherit; }
+  .btn:hover { background: var(--btn-hover); transform: translateY(-1px); }
+  .btn.primary { background: var(--accent-2); border-color: transparent; color: #fff; }
+  .btn.success { background: var(--accent); border-color: transparent; color: #fff; }
+  .status-section, .controls-section, .results-section { margin-bottom: 24px; padding: 16px; background: rgba(255,255,255,0.02); border-radius: var(--radius); }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; text-align: center; }
+  .stat-item .stat-number { font-size: 28px; font-weight: bold; color: var(--accent-2); }
+  .stat-item .stat-label { font-size: 12px; color: var(--muted); }
+  #status-message { padding: 12px; border-radius: 10px; text-align: center; display: none; margin-bottom: 16px; }
+  #status-message.info { background: rgba(59, 130, 246, .1); color: var(--accent-2); border: 1px solid rgba(59, 130, 246, .2); }
+  #status-message.success { background: rgba(34, 197, 94, .1); color: var(--accent); border: 1px solid rgba(34, 197, 94, .2); }
+  #status-message.error { background: rgba(239, 68, 68, .1); color: var(--danger); border: 1px solid rgba(239, 68, 68, .2); }
+  .loader { border: 4px solid var(--btn-bg); border-top: 4px solid var(--accent-2); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  .matches-container { display: grid; gap: 16px; grid-template-columns: 1fr; }
+  .match-card { background: var(--card); border: 1px solid rgba(255,255,255,.1); border-radius: var(--radius); padding: 20px; }
+  .match-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 12px; }
+  .match-quality { padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; }
+  .match-quality.ممتازة { background: #10b981; color: #fff; }
+  .match-quality.جيدة { background: #f59e0b; color: #fff; }
+  .match-quality.مقبولة { background: #6b7280; color: #fff; }
+  .match-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .detail-item strong { color: var(--accent-2); }
+  .match-reason { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; margin: 16px 0; font-style: italic; border-left: 3px solid var(--accent); }
+  .match-texts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .text-box { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px; font-size: 13px; white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto; }
+  .text-box h4 { margin: 0 0 8px; color: var(--accent-2); }
+  @media (max-width: 768px) { .match-texts { grid-template-columns: 1fr; } }
 </style>
 </head>
-
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>الصفحة 3</h1>
-      <p class="lead">هذه صفحة الصفحة 3.</p>
-      <a class="btn primary" href="index.html">العودة للصفحة الرئيسية</a>
+      <h1><span style="font-size: 24px;">🤖</span> مطابقة العروض والطلبات العقارية</h1>
+      <p class="lead">استخدم الذكاء الاصطناعي لتحليل النصوص وإيجاد أفضل التطابقات بين العروض والطلبات — باستخدام OpenAI.</p>
+
+      <div class="status-section">
+        <h2>📊 حالة البيانات</h2>
+        <div id="status-message"></div>
+        <div class="stats-grid">
+          <div class="stat-item"><div class="stat-number" id="total-docs">0</div><div class="stat-label">إجمالي المستندات</div></div>
+          <div class="stat-item"><div class="stat-number" id="request-count">0</div><div class="stat-label">الطلبات</div></div>
+          <div class="stat-item"><div class="stat-number" id="offer-count">0</div><div class="stat-label">العروض</div></div>
+        </div>
+      </div>
+
+      <div class="controls-section" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <button class="btn success" id="start-matching-btn" onclick="runMatching()">🚀 بدء المطابقة بالذكاء الاصطناعي</button>
+        <button class="btn" onclick="promptAndSaveApiKey()">🔑 إعداد مفتاح OpenAI</button>
+        <button class="btn" onclick="testApiKey()">🧪 اختبار المفتاح</button>
+        <a class="btn" href="page2.html" style="margin-inline-start:auto;">العودة للملفات</a>
+      </div>
+
+      <div class="results-section">
+        <h2>💡 نتائج المطابقة</h2>
+        <div id="loader" class="loader"></div>
+        <div id="matches-container" class="matches-container"></div>
+        <p id="no-results" style="color: var(--muted); text-align: center; display: block;">لم يتم إجراء أي عملية مطابقة بعد. اضغط على زر "بدء المطابقة" للبدء.</p>
+      </div>
     </div>
   </div>
+
+<script>
+// ===================== الإعدادات العامة =====================
+const DB_NAME = 'FilesStorage';
+const DB_VERSION = 1;
+const STORE_NAME = 'files';
+let db;
+
+const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+const OPENAI_MODEL   = 'gpt-4o-mini'; // عدّلها حسب المتاح لديك
+
+// ===================== إدارة مفتاح OpenAI =====================
+const API_KEY_STORAGE_KEY = 'OPENAI_API_KEY';
+
+function getApiKey() { return localStorage.getItem(API_KEY_STORAGE_KEY) || ''; }
+function saveApiKey(key) { if (!key || !key.trim()) return false; localStorage.setItem(API_KEY_STORAGE_KEY, key.trim()); return true; }
+function promptAndSaveApiKey() {
+  const current = getApiKey();
+  const value = prompt('أدخل مفتاح OpenAI (يُخزن محليًا في متصفحك):', current);
+  if (value !== null) {
+    if (saveApiKey(value)) showMessage('success', '✅ تم حفظ مفتاح OpenAI محليًا.');
+    else showMessage('error', '❌ لم يتم حفظ المفتاح. تأكد أنه غير فارغ.');
+  }
+}
+async function ensureApiKeyOrFail() {
+  const key = getApiKey();
+  if (!key) { showMessage('error','❌ لا يوجد مفتاح OpenAI. اضغط "إعداد مفتاح OpenAI" لإدخاله.'); throw new Error('API key is missing'); }
+  return key;
+}
+async function testApiKey() {
+  try {
+    const key = await ensureApiKeyOrFail();
+    const res = await fetch(OPENAI_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({
+        model: OPENAI_MODEL,
+        messages: [
+          { role: 'system', content: 'You are a JSON-only responder.' },
+          { role: 'user', content: 'Return exactly this JSON: {"ok":true}' }
+        ],
+        temperature: 0,
+        response_format: { type: "json_object" }
+      })
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      console.error('OpenAI test error:', body);
+      showMessage('error', `❌ فشل الاختبار: ${res.status} ${res.statusText}`);
+      return;
+    }
+    const data = await res.json();
+    const content = data?.choices?.[0]?.message?.content ?? '';
+    if (content.includes('"ok":true')) showMessage('success','✅ المفتاح يعمل.');
+    else showMessage('error','⚠️ استجابة غير متوقعة، تحقق من الصلاحيات.');
+  } catch (e) { showMessage('error', `❌ اختبار المفتاح فشل: ${e.message}`); }
+}
+
+// ===================== متغيرات المطابقة =====================
+let allTextFiles = [];
+let requests = [];
+let offers = [];
+
+// ===================== قاعدة البيانات =====================
+function initDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onerror = () => reject("خطأ في فتح قاعدة البيانات");
+    request.onsuccess = () => { db = request.result; resolve(db); };
+  });
+}
+
+// ===================== تحميل البيانات =====================
+async function loadDataForMatching() {
+  showMessage('info', '🔍 جاري تحميل البيانات من قاعدة البيانات...');
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAME], 'readonly');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+      const allFiles = request.result;
+      allTextFiles = allFiles.filter(file =>
+        (file.type && (file.type.includes('text') || file.type.includes('json'))) ||
+        (file.name && (file.name.endsWith('.txt') || file.name.endsWith('.json')))
+      );
+      if (allTextFiles.length === 0) { showMessage('error','❌ لم يتم العثور على ملفات نصية أو JSON.'); reject('لا توجد ملفات صالحة'); return; }
+      showMessage('success', `✅ تم تحميل ${allTextFiles.length} مستند بنجاح.`);
+      document.getElementById('total-docs').textContent = allTextFiles.length;
+      resolve();
+    };
+    request.onerror = () => { showMessage('error','❌ فشل في قراءة الملفات من قاعدة البيانات.'); reject(request.error); };
+  });
+}
+
+// ===================== تصنيف طلب/عرض =====================
+function classifyMessageType(text) {
+  if (!text) return 'غير محدد';
+  const textLower = text.toLowerCase();
+  const requestKeywords = ['مطلوب','ابحث عن','أريد','نريد','محتاج','بحث عن','عاوز','عايز','ادور على','أدور على','نبحث عن'];
+  const offerKeywords   = ['للبيع','للايجار','للإيجار','معروض','متوفر','يوجد','عندي','لدي','متاح','للتنازل','أعرض'];
+  const r = requestKeywords.reduce((s,k)=>s+(textLower.includes(k)?1:0),0);
+  const o = offerKeywords.reduce((s,k)=>s+(textLower.includes(k)?1:0),0);
+  if (r>o) return 'مطلوب'; if (o>r) return 'معروض'; return 'غير محدد';
+}
+
+async function classifyAndSeparateFiles() {
+  showMessage('info', '🔄 جاري تصنيف المستندات إلى طلبات وعروض...');
+  requests = []; offers = [];
+  for (const file of allTextFiles) {
+    try {
+      const base64 = file.data.split(',')[1]; if (!base64) continue;
+      const textContent = decodeURIComponent(escape(atob(base64)));
+      if (file.name.endsWith('.json')) {
+        const json = JSON.parse(textContent);
+        if (json.messages && Array.isArray(json.messages)) {
+          json.messages.forEach(m => {
+            const type = classifyMessageType(m.original_text || '');
+            if (type !== 'غير محدد') {
+              const info = { text: m.original_text };
+              if (type==='مطلوب') requests.push(info); else if (type==='معروض') offers.push(info);
+            }
+          });
+        }
+      } else {
+        const type = classifyMessageType(textContent);
+        if (type !== 'غير محدد') {
+          const info = { text: textContent };
+          if (type==='مطلوب') requests.push(info); else if (type==='معروض') offers.push(info);
+        }
+      }
+    } catch (e) { console.error(`فشل في معالجة الملف ${file.name}:`, e); }
+  }
+  document.getElementById('request-count').textContent = requests.length;
+  document.getElementById('offer-count').textContent = offers.length;
+  showMessage('success', `✅ تم التصنيف: ${requests.length} طلب، ${offers.length} عرض.`);
+}
+
+// ===================== إنشاء Prompt =====================
+function createMatchingPrompt(requestsBatch, offersBatch) {
+  let prompt = `أنت خبير مطابقة عقارية محترف. مهمتك هي تحليل قائمة الطلبات وقائمة العروض التالية وإيجاد أفضل التطابقات الممكنة.
+
+### قواعد المطابقة:
+1.  **الهدف**: طابق بين "طلب" و "عرض". لا تطابق طلب مع طلب أو عرض مع عرض.
+2.  **المعايير الأساسية**: يجب أن يتطابق نوع العقار والمنطقة.
+3.  **جودة المطابقة**: صنّف المطابقة إلى "ممتازة" أو "جيدة" أو "مقبولة".
+
+### تعليمات الإخراج:
+أرجع **مصفوفة JSON فقط** (بدون أي نص إضافي). كل عنصر:
+{
+  "quality": "...",
+  "property_type": "...",
+  "area": "...",
+  "requested_price": "...",
+  "offered_price": "...",
+  "requester_phone": "...",
+  "offerer_phone": "...",
+  "reason": "...",
+  "request_text": "...",
+  "offer_text": "..."
+}
+إذا لا توجد مطابقات أرجع [] فقط.
+
+---
+### الطلبات:
+`;
+  requestsBatch.forEach((req, i) => { prompt += `\n--- طلب ${i+1} ---\n${req.text}\n`; });
+  prompt += `\n---\n### العروض:\n`;
+  offersBatch.forEach((off, i) => { prompt += `\n--- عرض ${i+1} ---\n${off.text}\n`; });
+  prompt += `\n---\nأعد الآن المصفوفة فقط.`;
+  return prompt;
+}
+
+// ===================== استدعاء OpenAI =====================
+async function callOpenAI(prompt) {
+  const key = await ensureApiKeyOrFail();
+  try {
+    const res = await fetch(OPENAI_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({
+        model: OPENAI_MODEL,
+        temperature: 0,
+        response_format: { type: "json_object" }, // نجبره على JSON (سيعيد كائن؛ سنستخرج المصفوفة إن وُجدت)
+        messages: [
+          { role: 'system', content: 'أعد استجابة JSON فقط وبدون أي مقدمة أو شرح.' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+
+    if (!res.ok) {
+      const errorBody = await res.text();
+      console.error("OpenAI Response Error:", errorBody);
+      if (res.status === 401) throw new Error('مفتاح OpenAI غير صحيح.');
+      if (res.status === 429) throw new Error('تم تجاوز حدود المعدل/الكوتا (Rate Limit).');
+      throw new Error(`خطأ من OpenAI: ${res.status} ${res.statusText}`);
+    }
+
+    const data = await res.json();
+    let content = data?.choices?.[0]?.message?.content || '';
+    // قد يعيد كائن JSON؛ نحاول استخلاص المصفوفة داخله أو تحويل النص مباشرةً
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+      // إن كان كائن وفيه مصفوفة باسم matches، أو المخرجات نفسها مصفوفة
+      if (Array.isArray(parsed)) return parsed;
+      const maybeArr = parsed.matches || parsed.result || parsed.data;
+      if (Array.isArray(maybeArr)) return maybeArr;
+      // لو رجّع كائن واحد، نحوله لمصفوفة واحدة
+      if (parsed && typeof parsed === 'object') return [parsed];
+    } catch {
+      // إزالة أي علامات كود ثم المحاولة
+      content = content.replace(/```json|```/g,'').trim();
+      return JSON.parse(content);
+    }
+    return [];
+  } catch (error) {
+    showMessage('error', `❌ ${error.message}`);
+    console.error('callOpenAI error:', error);
+    return null;
+  }
+}
+
+// ===================== عرض النتائج =====================
+function displayMatches(matches) {
+  const container = document.getElementById('matches-container');
+  const noResultsP = document.getElementById('no-results');
+  container.innerHTML = '';
+
+  if (!matches || matches.length === 0) {
+    noResultsP.textContent = '✅ اكتمل التحليل. لم يتم العثور على مطابقات قوية.';
+    noResultsP.style.display = 'block';
+    return;
+  }
+  noResultsP.style.display = 'none';
+
+  matches.forEach(match => {
+    const card = document.createElement('div');
+    card.className = 'match-card';
+    card.innerHTML = `
+      <div class="match-header">
+        <h3>مطابقة ${match.property_type || ''}</h3>
+        <span class="match-quality ${match.quality || ''}">${match.quality || 'غير محدد'}</span>
+      </div>
+      <div class="match-details">
+        <div class="detail-item"><strong>المنطقة:</strong> ${match.area || 'غير محدد'}</div>
+        <div class="detail-item"><strong>سعر الطلب:</strong> ${match.requested_price || 'غير محدد'}</div>
+        <div class="detail-item"><strong>سعر العرض:</strong> ${match.offered_price || 'غير محدد'}</div>
+        <div class="detail-item"><strong>رقم الطالب:</strong> ${match.requester_phone || 'غير متوفر'}</div>
+        <div class="detail-item"><strong>رقم العارض:</strong> ${match.offerer_phone || 'غير متوفر'}</div>
+      </div>
+      <div class="match-reason"><strong>💡 سبب المطابقة:</strong> ${match.reason || 'لا يوجد سبب محدد.'}</div>
+      <div class="match-texts">
+        <div class="text-box"><h4>🔍 نص الطلب</h4><p>${match.request_text || ''}</p></div>
+        <div class="text-box"><h4>🏠 نص العرض</h4><p>${match.offer_text || ''}</p></div>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+// ===================== التشغيل الرئيسي =====================
+async function runMatching() {
+  const startBtn = document.getElementById('start-matching-btn');
+  const loader = document.getElementById('loader');
+  const matchesContainer = document.getElementById('matches-container');
+  const noResults = document.getElementById('no-results');
+
+  startBtn.disabled = true;
+  startBtn.textContent = '⏳ جاري التحليل...';
+  loader.style.display = 'block';
+  matchesContainer.innerHTML = '';
+  noResults.style.display = 'none';
+
+  try {
+    await ensureApiKeyOrFail();
+    await loadDataForMatching();
+    await classifyAndSeparateFiles();
+
+    if (requests.length === 0 || offers.length === 0) {
+      showMessage('error', '❌ يجب وجود طلبات وعروض على الأقل لبدء المطابقة.');
+      throw new Error('بيانات غير كافية');
+    }
+
+    showMessage('info', '🤖 جاري إرسال البيانات إلى OpenAI...');
+    const prompt = createMatchingPrompt(requests, offers);
+    const matches = await callOpenAI(prompt);
+
+    if (matches) {
+      displayMatches(matches);
+      showMessage('success', `🎉 اكتمل التحليل! تم العثور على ${matches.length} مطابقة.`);
+    } else {
+      noResults.textContent = 'حدث خطأ أثناء التحليل. يرجى مراجعة الـ Console.';
+      noResults.style.display = 'block';
+    }
+  } catch (error) {
+    console.error("فشل في عملية المطابقة:", error);
+    showMessage('error', `فشلت العملية: ${error.message}`);
+    noResults.textContent = `فشلت العملية: ${error.message}`;
+    noResults.style.display = 'block';
+  } finally {
+    startBtn.disabled = false;
+    startBtn.textContent = '🚀 بدء المطابقة بالذكاء الاصطناعي';
+    loader.style.display = 'none';
+  }
+}
+
+// ===================== رسائل الحالة =====================
+function showMessage(type, message) {
+  const statusDiv = document.getElementById('status-message');
+  statusDiv.className = type;
+  statusDiv.textContent = message;
+  statusDiv.style.display = 'block';
+}
+
+// ===================== بدء التطبيق =====================
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    await initDB();
+    showMessage('info', 'قاعدة البيانات جاهزة. اضبط مفتاح OpenAI واضغط البدء.');
+  } catch (error) {
+    showMessage('error', `❌ خطأ فادح في التهيئة: ${error}`);
+  }
+});
+</script>
 </body>
 </html>
