@@ -16,6 +16,8 @@
     --btn-hover: #374151;
     --shadow: 0 10px 25px rgba(0,0,0,.35);
     --radius: 18px;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
   }
   * { box-sizing: border-box; }
   html, body {
@@ -35,15 +37,142 @@
     display: grid; gap: 14px;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
-  a.btn {
+  a.btn, button.btn {
     display: inline-block; text-decoration: none; text-align: center; cursor: pointer;
     background: var(--btn-bg); color: var(--text); padding: 14px 16px;
     border-radius: 14px; border: 1px solid rgba(255,255,255,.08);
     transition: transform .12s ease, background .12s ease, border-color .12s ease;
     box-shadow: 0 6px 14px rgba(0,0,0,.25);
+    font-family: inherit; font-size: inherit;
   }
-  a.btn:hover { background: var(--btn-hover); transform: translateY(-1px); }
-  a.btn.primary { background: var(--accent-2); border-color: transparent; color: #fff; }
+  a.btn:hover, button.btn:hover { background: var(--btn-hover); transform: translateY(-1px); }
+  a.btn.primary, button.btn.primary { background: var(--accent-2); border-color: transparent; color: #fff; }
+  .btn.success { background: var(--accent); border-color: transparent; color: #fff; }
+  .btn.danger { background: var(--danger); border-color: transparent; color: #fff; }
+  .btn.danger:hover { background: var(--danger-hover); }
+  
+  .upload-section {
+    margin: 24px 0;
+    padding: 24px;
+    border: 2px dashed rgba(255,255,255,.1);
+    border-radius: var(--radius);
+    text-align: center;
+    transition: border-color .3s ease, background-color .3s ease;
+  }
+  .upload-section.dragover {
+    border-color: var(--accent-2);
+    background: rgba(59, 130, 246, .05);
+  }
+  
+  .config-section {
+    margin: 24px 0;
+    padding: 20px;
+    background: rgba(255,255,255,.02);
+    border-radius: var(--radius);
+  }
+  
+  input[type="file"] {
+    width: 100%;
+    padding: 12px;
+    background: var(--btn-bg);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 10px;
+    color: var(--text);
+  }
+  
+  .files-list {
+    margin: 24px 0;
+  }
+  
+  .file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    background: rgba(255,255,255,.02);
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  
+  .file-info {
+    flex: 1;
+  }
+  
+  .file-name {
+    font-weight: 500;
+    color: var(--text);
+  }
+  
+  .file-size {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  
+  .file-actions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .status-message {
+    margin: 16px 0;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+  }
+  
+  .status-success {
+    background: rgba(34, 197, 94, .1);
+    color: var(--accent);
+    border: 1px solid rgba(34, 197, 94, .2);
+  }
+  
+  .status-error {
+    background: rgba(239, 68, 68, .1);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, .2);
+  }
+  
+  .status-info {
+    background: rgba(59, 130, 246, .1);
+    color: var(--accent-2);
+    border: 1px solid rgba(59, 130, 246, .2);
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
+  .progress {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 8px 0;
+  }
+  
+  .progress-bar {
+    height: 100%;
+    background: var(--accent-2);
+    width: 0%;
+    transition: width .3s ease;
+  }
+  
+  .token-warning {
+    background: rgba(245, 158, 11, .1);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, .2);
+    padding: 16px;
+    border-radius: 10px;
+    margin: 16px 0;
+    text-align: center;
+  }
+  
   footer { margin-top: 18px; color: var(--muted); font-size: 13px; }
 </style>
 </head>
@@ -53,8 +182,409 @@
     <div class="card">
       <h1>الصفحة 1</h1>
       <p class="lead">هذه صفحة الصفحة 1.</p>
+      
+      <!-- معلومات الاتصال -->
+      <div class="config-section">
+        <h3>حالة الاتصال</h3>
+        <div id="connection-status">
+          <p>جاري التحقق من الاتصال بـ GitHub...</p>
+        </div>
+      </div>
+      
+      <!-- منطقة الرفع -->
+      <div class="upload-section" id="upload-area">
+        <h3>رفع الملفات</h3>
+        <p>اسحب الملفات هنا أو اختر من الجهاز</p>
+        <input type="file" id="file-input" multiple style="margin: 16px 0;">
+        <button class="btn primary" onclick="uploadFiles()">رفع الملفات</button>
+        <div class="progress hidden" id="upload-progress">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+      </div>
+      
+      <!-- رسائل الحالة -->
+      <div id="status-message" class="hidden"></div>
+      
+      <!-- قائمة الملفات -->
+      <div class="files-list">
+        <h3>الملفات المرفوعة</h3>
+        <button class="btn" onclick="loadFiles()">تحديث القائمة</button>
+        <div id="files-container">
+          <!-- سيتم إدراج الملفات هنا -->
+        </div>
+      </div>
+      
       <a class="btn primary" href="index.html">العودة للصفحة الرئيسية</a>
+      
+      <footer>
+        <p>✅ <strong>جاهز للاستخدام:</strong> تم تكوين GitHub Token بنجاح</p>
+      </footer>
     </div>
   </div>
+
+  <script>
+    // ⚠️ GitHub Token (تم تكوينه) ⚠️
+    const githubToken = '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';
+    const githubRepo = 'hypenet2233/static-site';
+    const apiBase = 'https://api.github.com/repos';
+    
+    // التحقق من صحة الإعدادات
+    async function checkConnection() {
+      const statusDiv = document.getElementById('connection-status');
+      
+      if (!githubToken || githubToken === 'ضع_التوكن_هنا' || githubToken.length < 20) {
+        statusDiv.innerHTML = `
+          <div class="token-warning">
+            <strong>تحذير:</strong> يجب وضع GitHub Token في الكود أولاً
+            <br><small>اذهب للسطر 230 في الكود وضع التوكن الخاص بك</small>
+          </div>
+        `;
+        return false;
+      }
+      
+      try {
+        // التحقق من وجود المستودع
+        const repoResponse = await fetch(`${apiBase}/${githubRepo}`, {
+          headers: {
+            'Authorization': `token ${githubToken}`,
+          }
+        });
+        
+        if (repoResponse.ok) {
+          // محاولة إنشاء مجلد uploads إذا لم يكن موجوداً
+          await createUploadsFolder();
+          
+          statusDiv.innerHTML = `
+            <div class="status-success">
+              <strong>✅ متصل بنجاح:</strong> ${githubRepo}
+              <br><small>جاهز لرفع الملفات</small>
+            </div>
+          `;
+          return true;
+        } else {
+          statusDiv.innerHTML = `
+            <div class="status-error">
+              <strong>❌ خطأ في الاتصال:</strong> تحقق من التوكن والمستودع
+              <br><small>كود الخطأ: ${repoResponse.status}</small>
+            </div>
+          `;
+          return false;
+        }
+      } catch (error) {
+        statusDiv.innerHTML = `
+          <div class="status-error">
+            <strong>❌ خطأ في الشبكة:</strong> ${error.message}
+          </div>
+        `;
+        return false;
+      }
+    }
+    
+    // إنشاء مجلد uploads مع README إذا لم يكن موجوداً
+    async function createUploadsFolder() {
+      try {
+        const readmeUrl = `${apiBase}/${githubRepo}/contents/uploads/README.md`;
+        
+        // التحقق من وجود الملف
+        const checkResponse = await fetch(readmeUrl, {
+          headers: {
+            'Authorization': `token ${githubToken}`,
+          }
+        });
+        
+        // إذا لم يكن موجوداً، أنشئه
+        if (checkResponse.status === 404) {
+          const readmeContent = btoa('# مجلد الرفع\n\nيحتوي هذا المجلد على الملفات المرفوعة من الموقع.\n');
+          
+          await fetch(readmeUrl, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `token ${githubToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: 'Create uploads folder with README',
+              content: readmeContent,
+              branch: 'main'
+            })
+          });
+        }
+      } catch (error) {
+        console.log('تحذير: لم يتم إنشاء مجلد uploads تلقائياً');
+      }
+    }
+    
+    // عرض رسالة الحالة
+    function showMessage(message, type) {
+      const statusDiv = document.getElementById('status-message');
+      statusDiv.textContent = message;
+      statusDiv.className = `status-message status-${type}`;
+      statusDiv.classList.remove('hidden');
+      
+      setTimeout(() => {
+        statusDiv.classList.add('hidden');
+      }, 5000);
+    }
+    
+    // تحويل الملف إلى base64
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+          const base64 = reader.result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = error => reject(error);
+      });
+    }
+    
+    // رفع ملف إلى GitHub
+    async function uploadFileToGitHub(file, content) {
+      const url = `${apiBase}/${githubRepo}/contents/uploads/${file.name}`;
+      
+      try {
+        // التحقق من وجود الملف أولاً
+        const checkResponse = await fetch(url, {
+          headers: {
+            'Authorization': `token ${githubToken}`,
+          }
+        });
+        
+        let sha = null;
+        if (checkResponse.ok) {
+          const existingFile = await checkResponse.json();
+          sha = existingFile.sha;
+        }
+        
+        const requestBody = {
+          message: `Upload ${file.name}`,
+          content: content,
+          branch: 'main'
+        };
+        
+        if (sha) {
+          requestBody.sha = sha; // للتحديث إذا كان الملف موجود
+        }
+        
+        const response = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody)
+        });
+        
+        if (response.ok) {
+          return { success: true, data: await response.json() };
+        } else {
+          const errorData = await response.json();
+          return { success: false, error: errorData.message };
+        }
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    }
+    
+    // رفع الملفات المحددة
+    async function uploadFiles() {
+      if (!githubToken || githubToken === 'ضع_التوكن_هنا' || githubToken.length < 20) {
+        showMessage('❌ خطأ في إعدادات GitHub Token', 'error');
+        return;
+      }
+      
+      const fileInput = document.getElementById('file-input');
+      const files = fileInput.files;
+      
+      if (files.length === 0) {
+        showMessage('⚠️ يرجى اختيار ملف واحد على الأقل', 'error');
+        return;
+      }
+      
+      const progressDiv = document.getElementById('upload-progress');
+      const progressBar = document.getElementById('progress-bar');
+      
+      progressDiv.classList.remove('hidden');
+      showMessage('🚀 بدء رفع الملفات...', 'info');
+      
+      let successCount = 0;
+      let failCount = 0;
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const progress = ((i + 1) / files.length) * 100;
+        progressBar.style.width = progress + '%';
+        
+        try {
+          const base64Content = await fileToBase64(file);
+          const result = await uploadFileToGitHub(file, base64Content);
+          
+          if (result.success) {
+            successCount++;
+          } else {
+            failCount++;
+            console.error(`فشل رفع ${file.name}:`, result.error);
+          }
+        } catch (error) {
+          failCount++;
+          console.error(`خطأ في معالجة ${file.name}:`, error);
+        }
+      }
+      
+      progressDiv.classList.add('hidden');
+      progressBar.style.width = '0%';
+      
+      if (successCount > 0 && failCount === 0) {
+        showMessage(`✅ تم رفع ${successCount} ملف بنجاح`, 'success');
+      } else if (successCount > 0 && failCount > 0) {
+        showMessage(`⚠️ تم رفع ${successCount} ملف، فشل رفع ${failCount} ملف`, 'error');
+      } else {
+        showMessage('❌ فشل رفع جميع الملفات', 'error');
+      }
+      
+      // مسح اختيار الملفات وتحديث القائمة
+      fileInput.value = '';
+      loadFiles();
+    }
+    
+    // تحميل قائمة الملفات من GitHub
+    async function loadFiles() {
+      if (!githubToken || githubToken === 'ضع_التوكن_هنا' || githubToken.length < 20) {
+        showMessage('❌ خطأ في إعدادات GitHub Token', 'error');
+        return;
+      }
+      
+      const url = `${apiBase}/${githubRepo}/contents/uploads`;
+      
+      try {
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `token ${githubToken}`,
+          }
+        });
+        
+        if (response.ok) {
+          const files = await response.json();
+          displayFiles(files);
+        } else if (response.status === 404) {
+          showMessage('📁 مجلد uploads غير موجود، سيتم إنشاؤه عند رفع أول ملف', 'info');
+          displayFiles([]);
+        } else {
+          showMessage('❌ خطأ في تحميل قائمة الملفات', 'error');
+        }
+      } catch (error) {
+        showMessage('❌ خطأ في الاتصال بـ GitHub', 'error');
+      }
+    }
+    
+    // عرض قائمة الملفات
+    function displayFiles(files) {
+      const container = document.getElementById('files-container');
+      
+      if (files.length === 0) {
+        container.innerHTML = '<p style="color: var(--muted); text-align: center;">📂 لا توجد ملفات مرفوعة</p>';
+        return;
+      }
+      
+      const fileItems = files
+        .filter(file => file.type === 'file' && file.name !== 'README.md')
+        .map(file => {
+          const sizeKB = Math.round((file.size || 0) / 1024);
+          return `
+            <div class="file-item">
+              <div class="file-info">
+                <div class="file-name">📄 ${file.name}</div>
+                <div class="file-size">${sizeKB} KB</div>
+              </div>
+              <div class="file-actions">
+                <button class="btn btn-small" onclick="downloadFile('${file.name}', '${file.download_url}')">⬇️ تحميل</button>
+                <button class="btn danger btn-small" onclick="deleteFile('${file.name}', '${file.sha}')">🗑️ حذف</button>
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+      
+      container.innerHTML = fileItems;
+    }
+    
+    // تحميل ملف
+    function downloadFile(fileName, downloadUrl) {
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+    
+    // حذف ملف
+    async function deleteFile(fileName, sha) {
+      if (!confirm(`🗑️ هل أنت متأكد من حذف ${fileName}؟`)) {
+        return;
+      }
+      
+      const url = `${apiBase}/${githubRepo}/contents/uploads/${fileName}`;
+      
+      try {
+        const response = await fetch(url, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: `Delete ${fileName}`,
+            sha: sha,
+            branch: 'main'
+          })
+        });
+        
+        if (response.ok) {
+          showMessage(`✅ تم حذف ${fileName} بنجاح`, 'success');
+          loadFiles();
+        } else {
+          showMessage(`❌ فشل حذف ${fileName}`, 'error');
+        }
+      } catch (error) {
+        showMessage('❌ خطأ في حذف الملف', 'error');
+      }
+    }
+    
+    // إعداد السحب والإفلات
+    function setupDragAndDrop() {
+      const uploadArea = document.getElementById('upload-area');
+      
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+      });
+      
+      uploadArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+      });
+      
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        document.getElementById('file-input').files = files;
+      });
+    }
+    
+    // تهيئة التطبيق
+    document.addEventListener('DOMContentLoaded', async () => {
+      setupDragAndDrop();
+      
+      // التحقق من الاتصال وتحميل الملفات
+      const isConnected = await checkConnection();
+      if (isConnected) {
+        loadFiles();
+      }
+    });
+  </script>
 </body>
 </html>
