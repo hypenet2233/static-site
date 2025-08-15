@@ -258,3 +258,13 @@ uploads/*
 # Processing outputs 
 processing/output/ 
 processing/cache/ 
+"# Ignore local archives and uploads (keep README)" 
+"uploads/*" 
+"!uploads/README.md" 
+"# Processing outputs (optional)" 
+"processing/output/" 
+"processing/cache/" 
+"*.zip" 
+"*.tar" 
+"*.tar.gz" 
+"*.rar" 
