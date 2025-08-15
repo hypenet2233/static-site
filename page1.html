@@ -163,14 +163,26 @@
     transition: width .3s ease;
   }
   
-  .token-warning {
-    background: rgba(245, 158, 11, .1);
-    color: #f59e0b;
-    border: 1px solid rgba(245, 158, 11, .2);
+  .connection-ok {
+    background: rgba(34, 197, 94, .1);
+    color: var(--accent);
+    border: 1px solid rgba(34, 197, 94, .2);
     padding: 16px;
     border-radius: 10px;
-    margin: 16px 0;
     text-align: center;
+  }
+  
+  .file-preview {
+    max-width: 60px;
+    max-height: 60px;
+    border-radius: 6px;
+    margin-left: 12px;
+  }
+  
+  .file-item-content {
+    display: flex;
+    align-items: center;
+    flex: 1;
   }
   
   footer { margin-top: 18px; color: var(--muted); font-size: 13px; }
@@ -183,20 +195,21 @@
       <h1>الصفحة 1</h1>
       <p class="lead">هذه صفحة الصفحة 1.</p>
       
-      <!-- معلومات الاتصال -->
+      <!-- معلومات الخدمة -->
       <div class="config-section">
-        <h3>حالة الاتصال</h3>
-        <div id="connection-status">
-          <p>جاري التحقق من الاتصال بـ GitHub...</p>
+        <h3>مركز الملفات المحلي</h3>
+        <div class="connection-ok">
+          <strong>✅ جاهز للاستخدام</strong>
+          <br><small>تخزين محلي آمن - يعمل بدون إنترنت</small>
         </div>
       </div>
       
       <!-- منطقة الرفع -->
       <div class="upload-section" id="upload-area">
-        <h3>رفع الملفات</h3>
+        <h3>إضافة الملفات</h3>
         <p>اسحب الملفات هنا أو اختر من الجهاز</p>
-        <input type="file" id="file-input" multiple style="margin: 16px 0;">
-        <button class="btn primary" onclick="uploadFiles()">رفع الملفات</button>
+        <input type="file" id="file-input" multiple accept="*/*" style="margin: 16px 0;">
+        <button class="btn primary" onclick="addFiles()">إضافة الملفات</button>
         <div class="progress hidden" id="upload-progress">
           <div class="progress-bar" id="progress-bar"></div>
         </div>
@@ -207,8 +220,12 @@
       
       <!-- قائمة الملفات -->
       <div class="files-list">
-        <h3>الملفات المرفوعة</h3>
-        <button class="btn" onclick="loadFiles()">تحديث القائمة</button>
+        <h3>ملفاتي (<span id="files-count">0</span>)</h3>
+        <div style="margin-bottom: 16px;">
+          <button class="btn" onclick="refreshFiles()">🔄 تحديث</button>
+          <button class="btn danger" onclick="clearAllFiles()">🗑️ مسح الكل</button>
+          <button class="btn success" onclick="exportFiles()">📦 تصدير الكل</button>
+        </div>
         <div id="files-container">
           <!-- سيتم إدراج الملفات هنا -->
         </div>
@@ -217,101 +234,87 @@
       <a class="btn primary" href="index.html">العودة للصفحة الرئيسية</a>
       
       <footer>
-        <p>✅ <strong>جاهز للاستخدام:</strong> تم تكوين GitHub Token بنجاح</p>
+        <p>💾 <strong>تخزين محلي:</strong> ملفاتك محفوظة في متصفحك بأمان</p>
       </footer>
     </div>
   </div>
 
   <script>
-    // ⚠️ GitHub Token (تم تكوينه) ⚠️
-    const githubToken = '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';
-    const githubRepo = 'hypenet2233/static-site';
-    const apiBase = 'https://api.github.com/repos';
+    // مخزن الملفات المحلي
+    const DB_NAME = 'FilesStorage';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'files';
     
-    // التحقق من صحة الإعدادات
-    async function checkConnection() {
-      const statusDiv = document.getElementById('connection-status');
-      
-      if (!githubToken || githubToken === 'ضع_التوكن_هنا' || githubToken.length < 20) {
-        statusDiv.innerHTML = `
-          <div class="token-warning">
-            <strong>تحذير:</strong> يجب وضع GitHub Token في الكود أولاً
-            <br><small>اذهب للسطر 230 في الكود وضع التوكن الخاص بك</small>
-          </div>
-        `;
-        return false;
-      }
-      
-      try {
-        // التحقق من وجود المستودع
-        const repoResponse = await fetch(`${apiBase}/${githubRepo}`, {
-          headers: {
-            'Authorization': `token ${githubToken}`,
-          }
-        });
+    let db;
+    
+    // تهيئة قاعدة البيانات المحلية
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
         
-        if (repoResponse.ok) {
-          // محاولة إنشاء مجلد uploads إذا لم يكن موجوداً
-          await createUploadsFolder();
-          
-          statusDiv.innerHTML = `
-            <div class="status-success">
-              <strong>✅ متصل بنجاح:</strong> ${githubRepo}
-              <br><small>جاهز لرفع الملفات</small>
-            </div>
-          `;
-          return true;
-        } else {
-          statusDiv.innerHTML = `
-            <div class="status-error">
-              <strong>❌ خطأ في الاتصال:</strong> تحقق من التوكن والمستودع
-              <br><small>كود الخطأ: ${repoResponse.status}</small>
-            </div>
-          `;
-          return false;
-        }
-      } catch (error) {
-        statusDiv.innerHTML = `
-          <div class="status-error">
-            <strong>❌ خطأ في الشبكة:</strong> ${error.message}
-          </div>
-        `;
-        return false;
-      }
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+        
+        request.onupgradeneeded = (event) => {
+          db = event.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            store.createIndex('name', 'name', { unique: false });
+            store.createIndex('uploadTime', 'uploadTime', { unique: false });
+          }
+        };
+      });
     }
     
-    // إنشاء مجلد uploads مع README إذا لم يكن موجوداً
-    async function createUploadsFolder() {
-      try {
-        const readmeUrl = `${apiBase}/${githubRepo}/contents/uploads/README.md`;
+    // حفظ ملف في قاعدة البيانات
+    function saveFile(fileData) {
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.add(fileData);
         
-        // التحقق من وجود الملف
-        const checkResponse = await fetch(readmeUrl, {
-          headers: {
-            'Authorization': `token ${githubToken}`,
-          }
-        });
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    // قراءة جميع الملفات
+    function getAllFiles() {
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.getAll();
         
-        // إذا لم يكن موجوداً، أنشئه
-        if (checkResponse.status === 404) {
-          const readmeContent = btoa('# مجلد الرفع\n\nيحتوي هذا المجلد على الملفات المرفوعة من الموقع.\n');
-          
-          await fetch(readmeUrl, {
-            method: 'PUT',
-            headers: {
-              'Authorization': `token ${githubToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              message: 'Create uploads folder with README',
-              content: readmeContent,
-              branch: 'main'
-            })
-          });
-        }
-      } catch (error) {
-        console.log('تحذير: لم يتم إنشاء مجلد uploads تلقائياً');
-      }
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    // حذف ملف
+    function deleteFile(id) {
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.delete(id);
+        
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    // مسح جميع الملفات
+    function clearAllFilesFromDB() {
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.clear();
+        
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
     }
     
     // عرض رسالة الحالة
@@ -323,77 +326,21 @@
       
       setTimeout(() => {
         statusDiv.classList.add('hidden');
-      }, 5000);
+      }, 4000);
     }
     
-    // تحويل الملف إلى base64
+    // تحويل ملف إلى Base64
     function fileToBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
         reader.readAsDataURL(file);
-        reader.onload = () => {
-          const base64 = reader.result.split(',')[1];
-          resolve(base64);
-        };
-        reader.onerror = error => reject(error);
       });
     }
     
-    // رفع ملف إلى GitHub
-    async function uploadFileToGitHub(file, content) {
-      const url = `${apiBase}/${githubRepo}/contents/uploads/${file.name}`;
-      
-      try {
-        // التحقق من وجود الملف أولاً
-        const checkResponse = await fetch(url, {
-          headers: {
-            'Authorization': `token ${githubToken}`,
-          }
-        });
-        
-        let sha = null;
-        if (checkResponse.ok) {
-          const existingFile = await checkResponse.json();
-          sha = existingFile.sha;
-        }
-        
-        const requestBody = {
-          message: `Upload ${file.name}`,
-          content: content,
-          branch: 'main'
-        };
-        
-        if (sha) {
-          requestBody.sha = sha; // للتحديث إذا كان الملف موجود
-        }
-        
-        const response = await fetch(url, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `token ${githubToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody)
-        });
-        
-        if (response.ok) {
-          return { success: true, data: await response.json() };
-        } else {
-          const errorData = await response.json();
-          return { success: false, error: errorData.message };
-        }
-      } catch (error) {
-        return { success: false, error: error.message };
-      }
-    }
-    
-    // رفع الملفات المحددة
-    async function uploadFiles() {
-      if (!githubToken || githubToken === 'ضع_التوكن_هنا' || githubToken.length < 20) {
-        showMessage('❌ خطأ في إعدادات GitHub Token', 'error');
-        return;
-      }
-      
+    // إضافة الملفات
+    async function addFiles() {
       const fileInput = document.getElementById('file-input');
       const files = fileInput.files;
       
@@ -406,7 +353,7 @@
       const progressBar = document.getElementById('progress-bar');
       
       progressDiv.classList.remove('hidden');
-      showMessage('🚀 بدء رفع الملفات...', 'info');
+      showMessage('📁 بدء إضافة الملفات...', 'info');
       
       let successCount = 0;
       let failCount = 0;
@@ -417,18 +364,22 @@
         progressBar.style.width = progress + '%';
         
         try {
-          const base64Content = await fileToBase64(file);
-          const result = await uploadFileToGitHub(file, base64Content);
+          const base64Data = await fileToBase64(file);
+          const fileData = {
+            id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            data: base64Data,
+            uploadTime: new Date().toLocaleString('ar-SA'),
+            timestamp: Date.now()
+          };
           
-          if (result.success) {
-            successCount++;
-          } else {
-            failCount++;
-            console.error(`فشل رفع ${file.name}:`, result.error);
-          }
+          await saveFile(fileData);
+          successCount++;
         } catch (error) {
           failCount++;
-          console.error(`خطأ في معالجة ${file.name}:`, error);
+          console.error(`فشل حفظ ${file.name}:`, error);
         }
       }
       
@@ -436,119 +387,191 @@
       progressBar.style.width = '0%';
       
       if (successCount > 0 && failCount === 0) {
-        showMessage(`✅ تم رفع ${successCount} ملف بنجاح`, 'success');
+        showMessage(`✅ تم حفظ ${successCount} ملف بنجاح`, 'success');
       } else if (successCount > 0 && failCount > 0) {
-        showMessage(`⚠️ تم رفع ${successCount} ملف، فشل رفع ${failCount} ملف`, 'error');
+        showMessage(`⚠️ تم حفظ ${successCount} ملف، فشل حفظ ${failCount} ملف`, 'error');
       } else {
-        showMessage('❌ فشل رفع جميع الملفات', 'error');
+        showMessage('❌ فشل حفظ جميع الملفات', 'error');
       }
       
-      // مسح اختيار الملفات وتحديث القائمة
       fileInput.value = '';
-      loadFiles();
-    }
-    
-    // تحميل قائمة الملفات من GitHub
-    async function loadFiles() {
-      if (!githubToken || githubToken === 'ضع_التوكن_هنا' || githubToken.length < 20) {
-        showMessage('❌ خطأ في إعدادات GitHub Token', 'error');
-        return;
-      }
-      
-      const url = `${apiBase}/${githubRepo}/contents/uploads`;
-      
-      try {
-        const response = await fetch(url, {
-          headers: {
-            'Authorization': `token ${githubToken}`,
-          }
-        });
-        
-        if (response.ok) {
-          const files = await response.json();
-          displayFiles(files);
-        } else if (response.status === 404) {
-          showMessage('📁 مجلد uploads غير موجود، سيتم إنشاؤه عند رفع أول ملف', 'info');
-          displayFiles([]);
-        } else {
-          showMessage('❌ خطأ في تحميل قائمة الملفات', 'error');
-        }
-      } catch (error) {
-        showMessage('❌ خطأ في الاتصال بـ GitHub', 'error');
-      }
+      await displayFiles();
     }
     
     // عرض قائمة الملفات
-    function displayFiles(files) {
-      const container = document.getElementById('files-container');
-      
-      if (files.length === 0) {
-        container.innerHTML = '<p style="color: var(--muted); text-align: center;">📂 لا توجد ملفات مرفوعة</p>';
-        return;
-      }
-      
-      const fileItems = files
-        .filter(file => file.type === 'file' && file.name !== 'README.md')
-        .map(file => {
-          const sizeKB = Math.round((file.size || 0) / 1024);
+    async function displayFiles() {
+      try {
+        const files = await getAllFiles();
+        const container = document.getElementById('files-container');
+        const countSpan = document.getElementById('files-count');
+        
+        countSpan.textContent = files.length;
+        
+        if (files.length === 0) {
+          container.innerHTML = '<p style="color: var(--muted); text-align: center;">📂 لا توجد ملفات محفوظة</p>';
+          return;
+        }
+        
+        const sortedFiles = files.sort((a, b) => b.timestamp - a.timestamp);
+        
+        const fileItems = sortedFiles.map(file => {
+          const sizeKB = Math.round(file.size / 1024);
+          const isImage = file.type.startsWith('image/');
+          
+          let preview = '';
+          if (isImage) {
+            preview = `<img src="${file.data}" class="file-preview" alt="معاينة">`;
+          }
+          
           return `
             <div class="file-item">
-              <div class="file-info">
-                <div class="file-name">📄 ${file.name}</div>
-                <div class="file-size">${sizeKB} KB</div>
+              <div class="file-item-content">
+                ${preview}
+                <div class="file-info">
+                  <div class="file-name">📄 ${file.name}</div>
+                  <div class="file-size">${sizeKB} KB - ${file.uploadTime}</div>
+                </div>
               </div>
               <div class="file-actions">
-                <button class="btn btn-small" onclick="downloadFile('${file.name}', '${file.download_url}')">⬇️ تحميل</button>
-                <button class="btn danger btn-small" onclick="deleteFile('${file.name}', '${file.sha}')">🗑️ حذف</button>
+                <button class="btn btn-small" onclick="downloadFile('${file.id}')">⬇️ تحميل</button>
+                <button class="btn btn-small" onclick="viewFile('${file.id}')">👁️ عرض</button>
+                <button class="btn danger btn-small" onclick="removeFile('${file.id}')">🗑️ حذف</button>
               </div>
             </div>
           `;
-        })
-        .join('');
-      
-      container.innerHTML = fileItems;
+        }).join('');
+        
+        container.innerHTML = fileItems;
+      } catch (error) {
+        showMessage('❌ خطأ في عرض الملفات', 'error');
+        console.error('Error displaying files:', error);
+      }
     }
     
     // تحميل ملف
-    function downloadFile(fileName, downloadUrl) {
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+    async function downloadFile(fileId) {
+      try {
+        const files = await getAllFiles();
+        const file = files.find(f => f.id === fileId);
+        
+        if (!file) {
+          showMessage('❌ الملف غير موجود', 'error');
+          return;
+        }
+        
+        const a = document.createElement('a');
+        a.href = file.data;
+        a.download = file.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        showMessage(`⬇️ تم تحميل ${file.name}`, 'success');
+      } catch (error) {
+        showMessage('❌ فشل تحميل الملف', 'error');
+      }
+    }
+    
+    // عرض ملف
+    async function viewFile(fileId) {
+      try {
+        const files = await getAllFiles();
+        const file = files.find(f => f.id === fileId);
+        
+        if (!file) {
+          showMessage('❌ الملف غير موجود', 'error');
+          return;
+        }
+        
+        const newWindow = window.open();
+        if (file.type.startsWith('image/')) {
+          newWindow.document.write(`
+            <img src="${file.data}" style="max-width: 100%; height: auto;" alt="${file.name}">
+            <p style="text-align: center; font-family: Arial;">${file.name}</p>
+          `);
+        } else if (file.type === 'application/pdf') {
+          newWindow.location.href = file.data;
+        } else {
+          newWindow.location.href = file.data;
+        }
+      } catch (error) {
+        showMessage('❌ فشل عرض الملف', 'error');
+      }
     }
     
     // حذف ملف
-    async function deleteFile(fileName, sha) {
-      if (!confirm(`🗑️ هل أنت متأكد من حذف ${fileName}؟`)) {
+    async function removeFile(fileId) {
+      try {
+        const files = await getAllFiles();
+        const file = files.find(f => f.id === fileId);
+        
+        if (!file) {
+          showMessage('❌ الملف غير موجود', 'error');
+          return;
+        }
+        
+        if (!confirm(`🗑️ هل أنت متأكد من حذف ${file.name}؟`)) {
+          return;
+        }
+        
+        await deleteFile(fileId);
+        await displayFiles();
+        showMessage(`✅ تم حذف ${file.name}`, 'success');
+      } catch (error) {
+        showMessage('❌ فشل حذف الملف', 'error');
+      }
+    }
+    
+    // تحديث قائمة الملفات
+    async function refreshFiles() {
+      await displayFiles();
+      showMessage('🔄 تم تحديث قائمة الملفات', 'info');
+    }
+    
+    // مسح جميع الملفات
+    async function clearAllFiles() {
+      if (!confirm('🗑️ هل أنت متأكد من حذف جميع الملفات؟ هذا الإجراء لا يمكن التراجع عنه!')) {
         return;
       }
       
-      const url = `${apiBase}/${githubRepo}/contents/uploads/${fileName}`;
-      
       try {
-        const response = await fetch(url, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `token ${githubToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            message: `Delete ${fileName}`,
-            sha: sha,
-            branch: 'main'
-          })
-        });
-        
-        if (response.ok) {
-          showMessage(`✅ تم حذف ${fileName} بنجاح`, 'success');
-          loadFiles();
-        } else {
-          showMessage(`❌ فشل حذف ${fileName}`, 'error');
-        }
+        await clearAllFilesFromDB();
+        await displayFiles();
+        showMessage('✅ تم حذف جميع الملفات', 'success');
       } catch (error) {
-        showMessage('❌ خطأ في حذف الملف', 'error');
+        showMessage('❌ فشل حذف الملفات', 'error');
+      }
+    }
+    
+    // تصدير جميع الملفات
+    async function exportFiles() {
+      try {
+        const files = await getAllFiles();
+        
+        if (files.length === 0) {
+          showMessage('⚠️ لا توجد ملفات للتصدير', 'error');
+          return;
+        }
+        
+        const exportData = {
+          exportDate: new Date().toLocaleString('ar-SA'),
+          filesCount: files.length,
+          files: files
+        };
+        
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(dataBlob);
+        a.download = `files_backup_${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        showMessage(`📦 تم تصدير ${files.length} ملف`, 'success');
+      } catch (error) {
+        showMessage('❌ فشل تصدير الملفات', 'error');
       }
     }
     
@@ -577,12 +600,14 @@
     
     // تهيئة التطبيق
     document.addEventListener('DOMContentLoaded', async () => {
-      setupDragAndDrop();
-      
-      // التحقق من الاتصال وتحميل الملفات
-      const isConnected = await checkConnection();
-      if (isConnected) {
-        loadFiles();
+      try {
+        await initDB();
+        setupDragAndDrop();
+        await displayFiles();
+        showMessage('✅ مركز الملفات جاهز للاستخدام', 'success');
+      } catch (error) {
+        showMessage('❌ خطأ في تهيئة التطبيق', 'error');
+        console.error('App initialization error:', error);
       }
     });
   </script>
