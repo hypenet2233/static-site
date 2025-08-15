@@ -209,7 +209,13 @@
         <h3>إضافة الملفات</h3>
         <p>اسحب الملفات هنا أو اختر من الجهاز</p>
         <input type="file" id="file-input" multiple accept="*/*" style="margin: 16px 0;">
-        <button class="btn primary" onclick="addFiles()">إضافة الملفات</button>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin: 16px 0;">
+          <button class="btn primary" onclick="addFiles()">📁 إضافة الملفات</button>
+          <button class="btn" onclick="browseDocuments()">📄 المستندات</button>
+          <button class="btn" onclick="browseImages()">🖼️ الصور</button>
+          <button class="btn" onclick="browseAudio()">🎵 الصوتيات</button>
+          <button class="btn" onclick="browseVideo()">🎬 الفيديو</button>
+        </div>
         <div class="progress hidden" id="upload-progress">
           <div class="progress-bar" id="progress-bar"></div>
         </div>
@@ -317,7 +323,54 @@
       });
     }
     
-    // عرض رسالة الحالة
+    // تصفح أنواع ملفات محددة
+    function browseDocuments() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.multiple = true;
+      input.accept = '.pdf,.doc,.docx,.txt,.rtf,.xls,.xlsx,.ppt,.pptx';
+      input.onchange = () => {
+        document.getElementById('file-input').files = input.files;
+        showMessage(`📄 تم اختيار ${input.files.length} مستند`, 'info');
+      };
+      input.click();
+    }
+    
+    function browseImages() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.multiple = true;
+      input.accept = 'image/*';
+      input.onchange = () => {
+        document.getElementById('file-input').files = input.files;
+        showMessage(`🖼️ تم اختيار ${input.files.length} صورة`, 'info');
+      };
+      input.click();
+    }
+    
+    function browseAudio() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.multiple = true;
+      input.accept = 'audio/*';
+      input.onchange = () => {
+        document.getElementById('file-input').files = input.files;
+        showMessage(`🎵 تم اختيار ${input.files.length} ملف صوتي`, 'info');
+      };
+      input.click();
+    }
+    
+    function browseVideo() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.multiple = true;
+      input.accept = 'video/*';
+      input.onchange = () => {
+        document.getElementById('file-input').files = input.files;
+        showMessage(`🎬 تم اختيار ${input.files.length} فيديو`, 'info');
+      };
+      input.click();
+    }
     function showMessage(message, type) {
       const statusDiv = document.getElementById('status-message');
       statusDiv.textContent = message;
