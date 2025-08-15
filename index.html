@@ -311,14 +311,18 @@
     </main>
 
     <!-- قائمة يمين: الأزرار الأربعة -->
-    <aside>
-      <div class="menu-card">
-        <button class="tool-btn" id="btnDecrypt">فك التشفير</button>
-        <button class="tool-btn" id="btnAI">تحليل الذكاء الصناعي</button>
-        <button class="tool-btn" id="btnSupplyDemand">صفحه العرض والطلب</button>
-        <button class="tool-btn" id="btnOpportunities">البحث عن فرص</button>
-      </div>
-    </aside>
+    <!-- إضافة زر رفع ملف في القائمة اليمنى -->
+<aside>
+  <div class="menu-card">
+    <button class="tool-btn" id="btnDecrypt">فك التشفير</button>
+    <button class="tool-btn" id="btnAI">تحليل الذكاء الصناعي</button>
+    <button class="tool-btn" id="btnSupplyDemand">صفحه العرض والطلب</button>
+    <button class="tool-btn" id="btnOpportunities">البحث عن فرص</button>
+    <input type="file" id="fileInput" style="display:none" />
+    <button class="tool-btn" id="btnUpload">رفع ملف</button>
+  </div>
+</aside>
+
 
     <!-- شريط سفلي: رصيد API -->
     <footer>
