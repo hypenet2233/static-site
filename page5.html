@@ -3,58 +3,361 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>الصفحة 5</title>
+<title>إعداد الأذونات والمجلدات (مرة واحدة)</title>
 <style>
   :root {
-    --bg: #0f172a;
-    --card: #111827;
-    --text: #e5e7eb;
-    --muted: #9ca3af;
-    --accent: #22c55e;
-    --accent-2: #3b82f6;
-    --btn-bg: #1f2937;
-    --btn-hover: #374151;
-    --shadow: 0 10px 25px rgba(0,0,0,.35);
-    --radius: 18px;
+    --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#9ca3af;
+    --accent:#22c55e; --accent2:#3b82f6; --danger:#ef4444; --warn:#f59e0b;
+    --btn:#1f2937; --btnh:#374151; --shadow:0 10px 25px rgba(0,0,0,.35); --r:18px;
   }
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0; padding: 0; background: var(--bg); color: var(--text);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Naskh Arabic", Arial, sans-serif;
-  }
-  .wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
-  .card {
-    width: min(920px, 96vw); background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
-    border: 1px solid rgba(255,255,255,.08);
-    border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow);
-    backdrop-filter: blur(6px);
-  }
-  h1 { margin: 0 0 10px; font-size: clamp(26px, 3.5vw, 40px); letter-spacing: .2px; }
-  p.lead { margin: 0 0 26px; color: var(--muted); }
-  .grid {
-    display: grid; gap: 14px;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  }
-  a.btn {
-    display: inline-block; text-decoration: none; text-align: center; cursor: pointer;
-    background: var(--btn-bg); color: var(--text); padding: 14px 16px;
-    border-radius: 14px; border: 1px solid rgba(255,255,255,.08);
-    transition: transform .12s ease, background .12s ease, border-color .12s ease;
-    box-shadow: 0 6px 14px rgba(0,0,0,.25);
-  }
-  a.btn:hover { background: var(--btn-hover); transform: translateY(-1px); }
-  a.btn.primary { background: var(--accent-2); border-color: transparent; color: #fff; }
-  footer { margin-top: 18px; color: var(--muted); font-size: 13px; }
+  *{box-sizing:border-box} html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Naskh Arabic",Arial,sans-serif;}
+  .wrap{min-height:100vh;display:grid;place-items:center;padding:24px}
+  .card{width:min(1000px,96vw);background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));
+    border:1px solid rgba(255,255,255,.08);border-radius:var(--r);padding:28px;box-shadow:var(--shadow);backdrop-filter:blur(6px)}
+  h1{margin:0 0 10px;font-size:clamp(26px,3.2vw,38px)} p.lead{margin:0 0 18px;color:var(--muted)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}
+  .btn{background:var(--btn);color:var(--text);border:1px solid rgba(255,255,255,.08);
+    padding:10px 12px;border-radius:12px;cursor:pointer;box-shadow:0 6px 14px rgba(0,0,0,.25)}
+  .btn:hover{background:var(--btnh)} .btn.primary{background:var(--accent2);border-color:transparent;color:#fff}
+  .btn.success{background:var(--accent);border-color:transparent;color:#fff}
+  .btn.warn{background:var(--warn);border-color:transparent;color:#fff}
+  .btn.danger{background:var(--danger);border-color:transparent;color:#fff}
+  .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+  .tile{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px}
+  .muted{color:var(--muted)} .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+  .list{display:grid;gap:8px} .kbd{background:#0003;border:1px solid #fff2;padding:1px 6px;border-radius:6px}
+  .ok{color:#34d399} .bad{color:#f87171}
+  input[type="text"]{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);
+    background:var(--btn);color:var(--text)}
+  small{color:var(--muted)}
 </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h1>الصفحة 5</h1>
-      <p class="lead">هذه صفحة الصفحة 5.</p>
-      <a class="btn primary" href="index.html">العودة للصفحة الرئيسية</a>
+<div class="wrap">
+  <div class="card">
+    <h1>⚙️ إعداد الأذونات والمجلدات (مرة واحدة)</h1>
+    <p class="lead">اسمح للموقع بالتخزين الدائم والوصول للمجلدات. تُحفظ الإعدادات في IndexedDB لتستخدمها جميع الصفحات الأخرى.</p>
+
+    <div class="grid">
+      <div class="tile">
+        <h3>1) التخزين الدائم للموقع</h3>
+        <p class="muted">يزيد احتمال احتفاظ المتصفح بالبيانات (مثل المقابض) وعدم مسحها تلقائيًا.</p>
+        <div class="row">
+          <button class="btn primary" id="persistBtn">تفعيل التخزين الدائم</button>
+          <span id="persistState" class="muted"></span>
+        </div>
+        <small>يتطلب HTTPS أو <span class="kbd">localhost</span>.</small>
+      </div>
+
+      <div class="tile">
+        <h3>2) إضافة مجلد مصرح به</h3>
+        <p class="muted">اختر مجلدًا (مثل <b>Download</b>) وامنحه إذن القراءة. سمِّه باسم معرف لتسترجعه لاحقًا في الصفحات الأخرى.</p>
+        <div class="row">
+          <input type="text" id="dirLabel" placeholder="اسم معرف للمجلد (مثال: downloads)" />
+        </div>
+        <div class="row">
+          <button class="btn success" id="addDirBtn">➕ إضافة مجلد</button>
+          <button class="btn" id="testSupportBtn">فحص دعم المتصفح</button>
+        </div>
+        <small id="supportInfo" class="muted"></small>
+      </div>
+
+      <div class="tile">
+        <h3>3) المجلدات المخزنة</h3>
+        <div id="dirsList" class="list"></div>
+        <small>يمكنك اختبار الإذن أو حذفه أو إعادة طلبه.</small>
+      </div>
+
+      <div class="tile">
+        <h3>معلومات سريعة</h3>
+        <ul class="muted">
+          <li>يجب تنفيذ الطلب من <b>ضغط زر</b> ليظهر حوار الإذن.</li>
+          <li>أندرويد كروم يدعم <code class="mono">showDirectoryPicker</code> على الإصدارات الحديثة. إن لم يظهر، استخدم اختيار ملفات.</li>
+          <li>لا يمكن الوصول لمسارات <code class="mono">content://</code> مباشرة.</li>
+        </ul>
+      </div>
     </div>
+
+    <hr style="border-color:#fff2;margin:18px 0" />
+
+    <div class="tile">
+      <h3>كيف تستخدم المقبض في الصفحات الأخرى؟</h3>
+      <p class="muted">أضف المقتطف التالي في أي صفحة، ثم نادِ <code class="mono">getDirectoryHandle('downloads')</code> مثلاً:</p>
+      <pre class="mono" style="white-space:pre-wrap;background:#0003;border:1px solid #fff2;padding:10px;border-radius:10px;overflow:auto">
+&lt;script&gt;
+(async () =&gt; {
+  // استرجاع مقبض مجلد محفوظ باسم label
+  async function getDirectoryHandle(label){
+    const db = await new Promise((res,rej)=>{
+      const req = indexedDB.open('FsPerms',1);
+      req.onupgradeneeded = () =&gt; req.result.createObjectStore('dirs',{keyPath:'id'});
+      req.onsuccess = () =&gt; res(req.result);
+      req.onerror = () =&gt; rej(req.error);
+    });
+    const tx = db.transaction(['dirs'],'readonly');
+    const st = tx.objectStore('dirs');
+    const item = await new Promise((res,rej)=>{
+      const g = st.get(label);
+      g.onsuccess = () =&gt; res(g.result);
+      g.onerror = () =&gt; rej(g.error);
+    });
+    if(!item?.handle) throw new Error('لا يوجد مقبض محفوظ لهذا الاسم');
+    // تأكد من الإذن
+    const q = await item.handle.queryPermission?.({mode:'read'}) ?? 'prompt';
+    if(q !== 'granted'){
+      const r = await item.handle.requestPermission?.({mode:'read'});
+      if(r !== 'granted') throw new Error('إذن القراءة مرفوض');
+    }
+    return item.handle;
+  }
+
+  // مثال: قراءة أسماء .txt/.json في الجذر
+  // const dir = await getDirectoryHandle('downloads');
+  // for await (const [name, entry] of dir.entries()){
+  //   if(entry.kind==='file' &amp;&amp; (name.endsWith('.txt') || name.endsWith('.json'))){
+  //     console.log('Found file:', name);
+  //   }
+  // }
+  window.getDirectoryHandle = getDirectoryHandle; // توفّره كسجلوبال إن أحببت
+})();
+&lt;/script&gt;
+      </pre>
+      <small>هذا يكفي لجعل كل صفحة من صفحاتك العشر تعيد استعمال نفس الأذونات بدون تكرار المجهود.</small>
+    </div>
+
   </div>
+</div>
+
+<script>
+/* ==================== منطق الصفحة ==================== */
+const DB_NAME = 'FsPerms';
+let db;
+
+// فتح/إنشاء IndexedDB (store: dirs)
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const _db = req.result;
+      if (!_db.objectStoreNames.contains('dirs')) _db.createObjectStore('dirs', { keyPath: 'id' });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// حفظ مقبض مجلد
+async function saveDir(label, handle){
+  if(!db) db = await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(['dirs'],'readwrite');
+    const st = tx.objectStore('dirs');
+    const put = st.put({ id: label, handle, savedAt: Date.now() });
+    put.onsuccess = () => res();
+    put.onerror = () => rej(put.error);
+  });
+}
+
+// قراءة كل المجلدات
+async function listDirs(){
+  if(!db) db = await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(['dirs'],'readonly');
+    const st = tx.objectStore('dirs');
+    const out = [];
+    st.openCursor().onsuccess = (e) => {
+      const cur = e.target.result;
+      if(cur){ out.push(cur.value); cur.continue(); } else { res(out); }
+    };
+    tx.onerror = () => rej(tx.error);
+  });
+}
+
+// حذف مجلد محفوظ
+async function removeDir(label){
+  if(!db) db = await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(['dirs'],'readwrite');
+    const st = tx.objectStore('dirs');
+    const del = st.delete(label);
+    del.onsuccess = () => res();
+    del.onerror = () => rej(del.error);
+  });
+}
+
+// عرض حالة التخزين الدائم
+async function updatePersistUI(){
+  const out = document.getElementById('persistState');
+  try{
+    if(!('storage' in navigator) || !('persist' in navigator.storage)){
+      out.textContent = 'غير مدعوم على هذا المتصفح.';
+      return;
+    }
+    const persisted = await navigator.storage.persisted();
+    out.innerHTML = persisted ? '<span class="ok">مفعّل ✅</span>' : '<span class="bad">غير مفعّل</span>';
+  }catch(e){
+    out.textContent = 'تعذر التحقق: ' + e.message;
+  }
+}
+
+// تفعيل التخزين الدائم
+async function enablePersist(){
+  const out = document.getElementById('persistState');
+  if(!('storage' in navigator) || !('persist' in navigator.storage)){
+    out.textContent = 'StorageManager.persist غير مدعوم';
+    return;
+  }
+  const ok = await navigator.storage.persist();
+  out.innerHTML = ok ? '<span class="ok">تم التفعيل ✅</span>' : '<span class="bad">رفض المتصفح</span>';
+}
+
+// فحص الدعم
+function testSupport(){
+  const el = document.getElementById('supportInfo');
+  const hasDirPicker = 'showDirectoryPicker' in window;
+  const hasOpenPicker = 'showOpenFilePicker' in window;
+  const isSecure = window.isSecureContext;
+  el.innerHTML =
+    `secureContext: <b>${isSecure}</b> · showDirectoryPicker: <b>${hasDirPicker}</b> · showOpenFilePicker: <b>${hasOpenPicker}</b>`;
+}
+
+// إضافة مجلد جديد
+async function addDirectory(){
+  try{
+    const label = (document.getElementById('dirLabel').value || '').trim();
+    if(!label) { alert('اكتب اسم معرف للمجلد'); return; }
+
+    if(!('showDirectoryPicker' in window)){
+      // fallback: اختيار ملفات بدلاً من مجلد
+      if(!('showOpenFilePicker' in window)){
+        alert('لا يوجد دعم لاختيار مجلد/ملفات في هذا المتصفح.');
+        return;
+      }
+      const handles = await window.showOpenFilePicker({ multiple:true });
+      if(!handles.length) return;
+      // نحتفظ بأول handle كـ directory-like (ليس مثالياً لكنه بديل)
+      const fileHandle = handles[0];
+      const ok = await fileHandle.requestPermission?.({mode:'read'});
+      if(ok !== 'granted'){ alert('تم رفض الإذن'); return; }
+      await saveDir(label, fileHandle); // يُخزَّن رغم أنه fileHandle
+      alert('تم الحفظ (كمقبض ملف بديل). يفضّل استخدام showDirectoryPicker مستقبلاً.');
+    } else {
+      const dirHandle = await window.showDirectoryPicker({ id: 'fs-setup', mode:'read' });
+      const q = await dirHandle.queryPermission?.({mode:'read'}) ?? 'prompt';
+      if(q !== 'granted'){
+        const r = await dirHandle.requestPermission?.({mode:'read'});
+        if(r !== 'granted'){ alert('تم رفض الإذن'); return; }
+      }
+      await saveDir(label, dirHandle);
+    }
+    await renderDirs();
+  }catch(e){
+    if(e?.name === 'AbortError') return; // المستخدم أغلق الحوار
+    alert('خطأ: ' + e.message);
+    console.error(e);
+  }
+}
+
+// اختبار إذن مجلد/ملف محفوظ
+async function probe(label, item){
+  try{
+    const handle = item.handle;
+    if(!handle){ alert('لا يوجد handle مخزون'); return; }
+
+    // تمييز ملف/مجلد
+    const isFileHandle = 'getFile' in handle;
+    const mode = 'read';
+    const q = await handle.queryPermission?.({mode}) ?? 'prompt';
+    if(q !== 'granted'){
+      const r = await handle.requestPermission?.({mode});
+      if(r !== 'granted'){ alert('إذن القراءة مرفوض'); return; }
+    }
+
+    if(isFileHandle){
+      const file = await handle.getFile();
+      alert('OK: تم الوصول إلى الملف: ' + file.name);
+    }else{
+      // حاول تعداد أول 5 عناصر
+      let i=0, names=[];
+      for await(const [name, entry] of handle.entries()){
+        names.push(name);
+        if(++i>=5) break;
+      }
+      alert('OK: تم الوصول للمجلد. أمثلة عناصر: \n' + (names[0] ? names.join('\n') : '(فارغ)'));
+    }
+  }catch(e){
+    alert('فشل الوصول: ' + e.message);
+    console.error(e);
+  }
+}
+
+// إعادة طلب إذن (force)
+async function regrant(label, item){
+  try{
+    const handle = item.handle;
+    const mode = 'read';
+    const r = await handle.requestPermission?.({mode});
+    alert(r === 'granted' ? 'تم منح الإذن ✅' : 'رُفض الإذن');
+  }catch(e){
+    alert('تعذر إعادة الإذن: ' + e.message);
+  }
+}
+
+// حذف
+async function remove(label){
+  if(!confirm('حذف "'+label+'" من التخزين؟')) return;
+  await removeDir(label);
+  await renderDirs();
+}
+
+// رسم القائمة
+async function renderDirs(){
+  const root = document.getElementById('dirsList');
+  root.innerHTML = '<span class="muted">جاري التحميل...</span>';
+  const items = await listDirs();
+  if(!items.length){
+    root.innerHTML = '<span class="muted">لا توجد مجلدات محفوظة بعد.</span>';
+    return;
+  }
+  root.innerHTML = '';
+  for(const it of items){
+    const row = document.createElement('div');
+    row.style.display='grid';
+    row.style.gridTemplateColumns='1fr auto auto auto';
+    row.style.gap='8px';
+    row.style.alignItems='center';
+    row.style.padding='8px';
+    row.style.border='1px solid rgba(255,255,255,.08)';
+    row.style.borderRadius='10px';
+    const time = new Date(it.savedAt||Date.now()).toLocaleString('ar-SA');
+    row.innerHTML = `
+      <div>
+        <div><b>${it.id}</b></div>
+        <div class="muted" style="font-size:12px">حُفظ: ${time}</div>
+      </div>
+      <button class="btn" data-act="probe">اختبار</button>
+      <button class="btn warn" data-act="regrant">إعادة الإذن</button>
+      <button class="btn danger" data-act="remove">حذف</button>
+    `;
+    row.querySelector('[data-act="probe"]').onclick = () => probe(it.id, it);
+    row.querySelector('[data-act="regrant"]').onclick = () => regrant(it.id, it);
+    row.querySelector('[data-act="remove"]').onclick = () => remove(it.id);
+    root.appendChild(row);
+  }
+}
+
+// إقلاع الصفحة
+document.getElementById('persistBtn').onclick = enablePersist;
+document.getElementById('addDirBtn').onclick = addDirectory;
+document.getElementById('testSupportBtn').onclick = testSupport;
+
+(async () => {
+  db = await openDB();
+  await updatePersistUI();
+  await renderDirs();
+})();
+</script>
 </body>
 </html>
