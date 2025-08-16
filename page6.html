@@ -209,15 +209,22 @@ async function loadAndProcessData() {
 
 function classifyMessageType(text) {
     if (!text) return 'غير محدد';
-    const textLower = text.toLowerCase();
-    const requestKeywords = ['مطلوب', 'ابحث عن', 'أريد', 'نريد', 'محتاج', 'بحث عن', 'عاوز', 'عايز', 'ادور على', 'أدور على', 'نبحث عن', 'wanted', 'looking for', 'need', 'require'];
-    const offerKeywords = ['للبيع', 'للايجار', 'للإيجار', 'معروض', 'متوفر', 'يوجد', 'عندي', 'لدي', 'متاح', 'للتنازل', 'أعرض', 'for sale', 'for rent', 'available', 'offering'];
+    const textLower = text.toLowerCase().replace(/\s/g, ''); // إزالة المسافات للمطابقة بشكل أفضل
+    
+    // كلمات دالة قوية للطلبات
+    const requestKeywords = ['مطلوب', 'ابحث عن', 'أبحث عن', 'اريد', 'أريد', 'نريد', 'محتاج', 'بحاجة', 'شراء', 'للشراء', 'wanted', 'lookingfor', 'need', 'require', 'buy'];
+    // كلمات دالة قوية للعروض
+    const offerKeywords = ['للبيع', 'للايجار', 'للإيجار', 'معروض', 'متوفر', 'يوجد', 'عندي', 'لدي', 'متاح', 'للتنازل', 'أعرض', 'forsale', 'forrent', 'available', 'offering'];
 
-    const requestCount = requestKeywords.reduce((sum, keyword) => sum + (textLower.includes(keyword) ? 1 : 0), 0);
-    const offerCount = offerKeywords.reduce((sum, keyword) => sum + (textLower.includes(keyword) ? 1 : 0), 0);
-
-    if (requestCount > offerCount) return 'مطلوب';
-    if (offerCount > requestCount) return 'معروض';
+    // البحث عن كلمات الطلب أولاً
+    if (requestKeywords.some(keyword => textLower.includes(keyword))) {
+        return 'مطلوب';
+    }
+    // ثم البحث عن كلمات العرض
+    if (offerKeywords.some(keyword => textLower.includes(keyword))) {
+        return 'معروض';
+    }
+    
     return 'غير محدد';
 }
 
@@ -231,7 +238,13 @@ async function classifyAndSeparateFiles() {
             if (file.data && file.data.includes(',')) {
                 const base64 = file.data.split(',')[1];
                 if (base64) {
-                    textContent = decodeURIComponent(escape(atob(base64)));
+                    // استخدام try-catch للتعامل مع base64 غير صالح
+                    try {
+                        textContent = decodeURIComponent(escape(atob(base64)));
+                    } catch (e) {
+                        console.warn(`Could not decode base64 for file ${file.name}. Skipping.`, e);
+                        continue;
+                    }
                 }
             }
             if (!textContent) continue;
@@ -250,18 +263,23 @@ async function classifyAndSeparateFiles() {
                     });
                 }
             } else {
-                const type = classifyMessageType(textContent);
-                if (type !== 'غير محدد') {
-                    const info = { text: textContent, source: file.name };
-                    if (type === 'مطلوب') requests.push(info);
-                    else if (type === 'معروض') offers.push(info);
-                }
+                // تقسيم الملفات النصية الكبيرة إلى أسطر أو فقرات للمعالجة
+                const lines = textContent.split('\n').filter(line => line.trim().length > 10);
+                lines.forEach(line => {
+                    const type = classifyMessageType(line);
+                    if (type !== 'غير محدد') {
+                        const info = { text: line, source: file.name };
+                        if (type === 'مطلوب') requests.push(info);
+                        else if (type === 'معروض') offers.push(info);
+                    }
+                });
             }
         } catch (e) {
             console.error(`Failed to process file ${file.name}:`, e);
         }
     }
 }
+
 
 // --- File Saving Functions ---
 
