@@ -624,7 +624,9 @@
             <!-- Tab Navigation -->
             <div class="tab-nav">
                 <button class="tab-btn active" onclick="switchTab('matching')">🤖 المطابقة الذكية</button>
-                <button class="tab-btn" onclick="switchTab('analysis')">📊 التحليل المتقدم</button>
+                <button class="tab-btn" onclick="switchTab('requests')">📝 الطلبات المكتشفة (<span id="requests-tab-count">0</span>)</button>
+                <button class="tab-btn" onclick="switchTab('offers')">🏠 العروض المكتشفة (<span id="offers-tab-count">0</span>)</button>
+                <button class="tab-btn" onclick="switchTab('results')">🎯 نتائج المطابقة (<span id="results-tab-count">0</span>)</button>
                 <button class="tab-btn" onclick="switchTab('discovery')">🔍 اكتشاف الملفات</button>
             </div>
 
@@ -707,6 +709,67 @@
                     <div id="loader" class="loader"></div>
                     <div id="matches-container" class="matches-container"></div>
                     <p id="no-results" style="color: var(--muted); text-align: center; display: block;">ابدأ البحث الذكي لاكتشاف الملفات وتحليل المطابقات تلقائياً</p>
+                </div>
+            </div>
+
+            <!-- Requests Tab -->
+            <div id="requests-tab" class="tab-content">
+                <div class="analytics-section">
+                    <h2>📝 الطلبات المكتشفة من الملفات</h2>
+                    <div style="margin-bottom: 16px;">
+                        <button class="btn success" onclick="exportRequests()">📤 تصدير الطلبات</button>
+                        <button class="btn" onclick="refreshRequestsView()">🔄 تحديث</button>
+                        <button class="btn primary" onclick="analyzeRequestsPatterns()">📊 تحليل الأنماط</button>
+                    </div>
+                    <div id="requests-container"></div>
+                </div>
+            </div>
+
+            <!-- Offers Tab -->
+            <div id="offers-tab" class="tab-content">
+                <div class="analytics-section">
+                    <h2>🏠 العروض المكتشفة من الملفات</h2>
+                    <div style="margin-bottom: 16px;">
+                        <button class="btn success" onclick="exportOffers()">📤 تصدير العروض</button>
+                        <button class="btn" onclick="refreshOffersView()">🔄 تحديث</button>
+                        <button class="btn primary" onclick="analyzeOffersPatterns()">📊 تحليل الأنماط</button>
+                    </div>
+                    <div id="offers-container"></div>
+                </div>
+            </div>
+
+            <!-- Results Tab -->
+            <div id="results-tab" class="tab-content">
+                <div class="analytics-section">
+                    <h2>🎯 نتائج المطابقة الذكية</h2>
+                    <div style="margin-bottom: 16px;">
+                        <button class="btn success" onclick="exportResults()">📤 تصدير النتائج</button>
+                        <button class="btn" onclick="refreshResultsView()">🔄 تحديث</button>
+                        <button class="btn primary" onclick="generateMatchingReport()">📋 تقرير شامل</button>
+                        <button class="btn warning" onclick="clearAllResults()">🗑️ مسح النتائج</button>
+                    </div>
+                    
+                    <!-- Results Statistics -->
+                    <div class="stats-grid" style="margin-bottom: 20px;">
+                        <div class="stat-item">
+                            <div class="stat-number" id="results-total">0</div>
+                            <div class="stat-label">إجمالي المطابقات</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="results-confirmed">0</div>
+                            <div class="stat-label">مطابقات مؤكدة</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="results-potential">0</div>
+                            <div class="stat-label">مطابقات محتملة</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="results-success-rate">0%</div>
+                            <div class="stat-label">معدل النجاح</div>
+                        </div>
+                    </div>
+                    
+                    <div id="results-container"></div>
                 </div>
             </div>
 
@@ -1335,62 +1398,192 @@
             }
         }
 
-        // ===================== Smart Matching with Discovered Data =====================
+        // ===================== Smart Matching with Enhanced Error Handling =====================
         async function runSmartMatching() {
+            const startBtn = document.getElementById('start-matching-btn');
+            const loader = document.getElementById('loader');
+            
             if (requests.length === 0 || offers.length === 0) {
                 showMessage('warning', '⚠️ ابدأ البحث الذكي أولاً لاكتشاف البيانات');
                 return;
             }
 
+            // تعطيل الزر وبدء التحميل
+            startBtn.disabled = true;
+            startBtn.textContent = '🧠 جاري المطابقة الذكية...';
+            loader.style.display = 'block';
+            
             showMessage('info', '🧠 بدء المطابقة الذكية مع البيانات المكتشفة...');
+            logToSearch(`🔍 بدء تحليل ${requests.length} طلب و ${offers.length} عرض`, 'info');
             
             try {
                 const key = getApiKey();
                 if (!key) {
-                    showMessage('error', '❌ مطلوب مفتاح OpenAI للمطابقة الذكية');
-                    return;
+                    throw new Error('مطلوب مفتاح OpenAI للمطابقة الذكية');
                 }
 
+                performanceMonitor.startTimer('matching');
+                updateAIProgress(10);
+                
+                // إنشاء prompt محسن
                 const prompt = createSmartMatchingPrompt(requests, offers);
+                logToSearch('📝 إرسال البيانات لـ OpenAI للتحليل...', 'info');
+                updateAIProgress(30);
+                
+                // استدعاء OpenAI
                 const matches = await callOpenAI(prompt, key);
-
+                updateAIProgress(80);
+                
+                performanceMonitor.endTimer('matching');
+                
                 if (matches && matches.length > 0) {
+                    // عرض النتائج
                     displayMatches(matches);
-                    showMessage('success', `🎉 تم العثور على ${matches.length} مطابقة ذكية!`);
+                    updateAIProgress(100);
+                    
+                    // تحديث الإحصائيات
                     document.getElementById('matches-count').textContent = matches.length;
+                    
+                    // حفظ النتائج
+                    saveMatchingResults(matches);
+                    
+                    showMessage('success', `🎉 تم العثور على ${matches.length} مطابقة ذكية!`);
+                    logToSearch(`✅ نجحت المطابقة: ${matches.length} نتيجة`, 'success');
+                    
+                    // تحليل جودة النتائج
+                    analyzeMatchQuality(matches);
+                    
                 } else {
+                    updateAIProgress(100);
                     showMessage('info', '📋 لم يتم العثور على مطابقات قوية في البيانات المكتشفة');
+                    logToSearch('ℹ️ لا توجد مطابقات قوية', 'warning');
+                    
+                    // عرض اقتراحات
+                    displaySuggestions();
                 }
 
             } catch (error) {
+                updateAIProgress(0);
+                console.error('Smart matching error:', error);
                 showMessage('error', `❌ خطأ في المطابقة الذكية: ${error.message}`);
+                logToSearch(`💥 فشل المطابقة: ${error.message}`, 'error');
+                
+                // عرض معلومات تشخيصية
+                displayDiagnosticInfo(error);
+                
+            } finally {
+                // إعادة تفعيل الزر
+                startBtn.disabled = false;
+                startBtn.textContent = '🧠 بدء المطابقة الذكية';
+                loader.style.display = 'none';
+                
+                // تحديث إحصائيات الأداء
+                updatePerformanceStats();
+            }
+        }
+
+        function analyzeMatchQuality(matches) {
+            const qualityStats = {
+                مؤكدة: matches.filter(m => m.quality === 'مؤكدة').length,
+                محتملة: matches.filter(m => m.quality === 'محتملة').length,
+                ممكنة: matches.filter(m => m.quality === 'ممكنة').length
+            };
+            
+            logToSearch(`📊 جودة المطابقات - مؤكدة: ${qualityStats.مؤكدة}, محتملة: ${qualityStats.محتملة}, ممكنة: ${qualityStats.ممكنة}`, 'info');
+            
+            // عرض تحليل سريع
+            const highQualityPercent = Math.round((qualityStats.مؤكدة / matches.length) * 100);
+            if (highQualityPercent >= 70) {
+                showMessage('success', `🌟 ممتاز! ${highQualityPercent}% من المطابقات مؤكدة`);
+            } else if (highQualityPercent >= 40) {
+                showMessage('info', `👍 جيد! ${highQualityPercent}% من المطابقات مؤكدة`);
+            } else {
+                showMessage('warning', `⚠️ جودة منخفضة: ${highQualityPercent}% فقط مؤكدة`);
+            }
+        }
+
+        function saveMatchingResults(matches) {
+            try {
+                const resultsData = {
+                    timestamp: new Date().toISOString(),
+                    totalMatches: matches.length,
+                    sourceRequests: requests.length,
+                    sourceOffers: offers.length,
+                    matches: matches,
+                    performance: performanceMonitor.getReport()
+                };
+                
+                localStorage.setItem('smart_matching_results', JSON.stringify(resultsData));
+                logToSearch('💾 تم حفظ نتائج المطابقة', 'success');
+                
+            } catch (error) {
+                logToSearch(`❌ فشل حفظ النتائج: ${error.message}`, 'error');
+            }
+        }
+
+        function displaySuggestions() {
+            const container = document.getElementById('matches-container');
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; background: rgba(245, 158, 11, 0.1); border: 2px solid rgba(245, 158, 11, 0.3); border-radius: 16px;">
+                    <h3>💡 اقتراحات لتحسين النتائج</h3>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <p>🔍 <strong>ابحث في مجلدات إضافية:</strong> جرب البحث العميق للعثور على ملفات أكثر</p>
+                        <p>📱 <strong>تحقق من تطبيقات المراسلة:</strong> WhatsApp, Telegram قد تحتوي على بيانات عقارية</p>
+                        <p>📄 <strong>أضف ملفات يدوياً:</strong> ارفع ملفات إضافية تحتوي على عروض وطلبات</p>
+                        <p>🤖 <strong>حسن الـ prompt:</strong> تأكد من وضوح البيانات المدخلة</p>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <button class="btn primary" onclick="deepScanSystem()">🔬 فحص عميق</button>
+                        <button class="btn success" onclick="aiAutoDiscover()">🤖 اكتشاف تلقائي</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function displayDiagnosticInfo(error) {
+            logToSearch('🔧 معلومات تشخيصية:', 'info');
+            logToSearch(`- نوع الخطأ: ${error.name}`, 'info');
+            logToSearch(`- رسالة الخطأ: ${error.message}`, 'error');
+            logToSearch(`- عدد الطلبات: ${requests.length}`, 'info');
+            logToSearch(`- عدد العروض: ${offers.length}`, 'info');
+            logToSearch(`- حالة مفتاح API: ${getApiKey() ? 'موجود' : 'مفقود'}`, getApiKey() ? 'success' : 'error');
+            
+            if (error.message.includes('API')) {
+                logToSearch('💡 جرب اختبار مفتاح OpenAI أولاً', 'warning');
             }
         }
 
         function createSmartMatchingPrompt(requestsBatch, offersBatch) {
-            return `أنت خبير عقاري ذكي متخصص في تحليل البيانات المكتشفة من ملفات الأندرويد.
-            
-تم اكتشاف البيانات التالية من فحص الملفات:
+            return `أنت محلل عقاري ذكي. مهمتك تحليل البيانات المكتشفة ومطابقة العروض مع الطلبات.
 
-الطلبات المكتشفة:
-${requestsBatch.map((req, i) => `${i + 1}. ${req.text} (المصدر: ${req.source})`).join('\n')}
+البيانات المكتشفة:
 
-العروض المكتشفة:
-${offersBatch.map((offer, i) => `${i + 1}. ${offer.text} (المصدر: ${offer.source})`).join('\n')}
+الطلبات:
+${requestsBatch.map((req, i) => `${i + 1}. ${req.text}`).join('\n')}
 
-قم بتحليل ذكي ومطابقة العروض مع الطلبات. أرجع JSON مع المطابقات بالصيغة:
-[{
-  "quality": "مؤكدة/محتملة/ممكنة",
-  "property_type": "نوع العقار",
-  "area": "المنطقة",
-  "requested_price": "سعر الطلب",
-  "offered_price": "سعر العرض",
+العروض:
+${offersBatch.map((offer, i) => `${i + 1}. ${offer.text}`).join('\n')}
+
+تعليمات مهمة:
+- أرجع مصفوفة JSON فقط
+- لا تضع أي نص قبل أو بعد JSON
+- ابدأ مباشرة بـ [
+- كل مطابقة يجب أن تحتوي على الحقول التالية فقط:
+
+[
+{
+  "quality": "مؤكدة",
+  "property_type": "شقة",
+  "area": "الرياض",
+  "requested_price": "300 ألف",
+  "offered_price": "280 ألف",
   "reason": "سبب المطابقة",
-  "request_text": "نص الطلب",
-  "offer_text": "نص العرض",
-  "urgency_score": "1-10",
-  "source_files": "ملفات المصدر"
-}]`;
+  "request_text": "نص الطلب الكامل",
+  "offer_text": "نص العرض الكامل",
+  "urgency_score": 8,
+  "source_files": "اسم الملف المصدر"
+}
+]`;
         }
 
         async function callOpenAI(prompt, apiKey) {
@@ -1678,7 +1871,271 @@ ${offersBatch.map((offer, i) => `${i + 1}. ${offer.text} (المصدر: ${offer.
             resultsContainer.appendChild(resultCard);
         }
 
-        // ===================== Enhanced System Integration =====================
+        // ===================== Display Functions for Requests, Offers & Results =====================
+        
+        function updateTabCounters() {
+            document.getElementById('requests-tab-count').textContent = requests.length;
+            document.getElementById('offers-tab-count').textContent = offers.length;
+            document.getElementById('results-tab-count').textContent = allMatches.length;
+        }
+
+        function displayRequests() {
+            const container = document.getElementById('requests-container');
+            if (!container) return;
+
+            if (requests.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--muted);">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+                        <h3>لا توجد طلبات مكتشفة</h3>
+                        <p>ابدأ البحث الذكي لاكتشاف الطلبات من الملفات</p>
+                        <button class="btn primary" onclick="startSmartSearch()">🔍 بدء البحث</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const requestsHTML = requests.map((request, index) => `
+                <div class="discovered-file-item" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);">
+                    <div class="file-info" style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <span style="background: var(--accent-2); color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                                طلب ${index + 1}
+                            </span>
+                            <span style="color: var(--muted); font-size: 12px;">
+                                المصدر: ${request.source || 'غير محدد'}
+                            </span>
+                        </div>
+                        <div style="font-weight: 500; margin-bottom: 8px; line-height: 1.4;">
+                            ${request.text}
+                        </div>
+                        ${request.phones && request.phones.length > 0 ? `
+                            <div style="font-size: 12px; color: var(--accent); margin-bottom: 4px;">
+                                📞 ${request.phones.join(', ')}
+                            </div>
+                        ` : ''}
+                        ${request.prices && request.prices.length > 0 ? `
+                            <div style="font-size: 12px; color: var(--accent-3); margin-bottom: 4px;">
+                                💰 ${request.prices.join(', ')}
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <button class="btn btn-small" onclick="findMatchesForRequest(${index})" title="البحث عن مطابقات">🔍</button>
+                        <button class="btn btn-small success" onclick="copyRequestText(${index})" title="نسخ النص">📋</button>
+                        <button class="btn btn-small warning" onclick="editRequest(${index})" title="تعديل">✏️</button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = requestsHTML;
+        }
+
+        function displayOffers() {
+            const container = document.getElementById('offers-container');
+            if (!container) return;
+
+            if (offers.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--muted);">
+                        <div style="font-size: 48px; margin-bottom: 16px;">🏠</div>
+                        <h3>لا توجد عروض مكتشفة</h3>
+                        <p>ابدأ البحث الذكي لاكتشاف العروض من الملفات</p>
+                        <button class="btn primary" onclick="startSmartSearch()">🔍 بدء البحث</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const offersHTML = offers.map((offer, index) => `
+                <div class="discovered-file-item" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3);">
+                    <div class="file-info" style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <span style="background: var(--accent); color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                                عرض ${index + 1}
+                            </span>
+                            <span style="color: var(--muted); font-size: 12px;">
+                                المصدر: ${offer.source || 'غير محدد'}
+                            </span>
+                        </div>
+                        <div style="font-weight: 500; margin-bottom: 8px; line-height: 1.4;">
+                            ${offer.text}
+                        </div>
+                        ${offer.phones && offer.phones.length > 0 ? `
+                            <div style="font-size: 12px; color: var(--accent); margin-bottom: 4px;">
+                                📞 ${offer.phones.join(', ')}
+                            </div>
+                        ` : ''}
+                        ${offer.prices && offer.prices.length > 0 ? `
+                            <div style="font-size: 12px; color: var(--accent-3); margin-bottom: 4px;">
+                                💰 ${offer.prices.join(', ')}
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <button class="btn btn-small" onclick="findMatchesForOffer(${index})" title="البحث عن مطابقات">🔍</button>
+                        <button class="btn btn-small success" onclick="copyOfferText(${index})" title="نسخ النص">📋</button>
+                        <button class="btn btn-small warning" onclick="editOffer(${index})" title="تعديل">✏️</button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = offersHTML;
+        }
+
+        function displayResults() {
+            const container = document.getElementById('results-container');
+            if (!container) return;
+
+            if (!allMatches || allMatches.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--muted);">
+                        <div style="font-size: 48px; margin-bottom: 16px;">🎯</div>
+                        <h3>لا توجد نتائج مطابقة</h3>
+                        <p>قم بالمطابقة الذكية للحصول على النتائج</p>
+                        <button class="btn primary" onclick="runSmartMatching()">🧠 بدء المطابقة</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // تحديث إحصائيات النتائج
+            updateResultsStats();
+
+            const resultsHTML = allMatches.map((match, index) => `
+                <div class="match-card" style="margin-bottom: 16px;">
+                    <div class="match-header">
+                        <h3>🏠 مطابقة ${index + 1}: ${match.property_type || 'عقارية'}</h3>
+                        <span class="match-quality ${match.quality}">${match.quality}</span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px;">
+                        <div><strong>المنطقة:</strong> ${match.area || 'غير محدد'}</div>
+                        <div><strong>سعر الطلب:</strong> ${match.requested_price || 'غير محدد'}</div>
+                        <div><strong>سعر العرض:</strong> ${match.offered_price || 'غير محدد'}</div>
+                        <div><strong>درجة الإلحاح:</strong> ${match.urgency_score || 'غير محدد'}/10</div>
+                        <div><strong>ملفات المصدر:</strong> ${match.source_files || 'بيانات مكتشفة'}</div>
+                    </div>
+                    
+                    <div style="background: rgba(139, 92, 246, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                        <strong>💡 سبب المطابقة:</strong> ${match.reason}
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <h4 style="margin: 0 0 8px; color: var(--accent-2);">📝 نص الطلب:</h4>
+                            <div style="background: rgba(59, 130, 246, 0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                                ${match.request_text}
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="margin: 0 0 8px; color: var(--accent);">🏠 نص العرض:</h4>
+                            <div style="background: rgba(34, 197, 94, 0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(34, 197, 94, 0.3);">
+                                ${match.offer_text}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button class="btn success" onclick="exportMatch(${index})" title="تصدير هذه المطابقة">📤 تصدير</button>
+                        <button class="btn primary" onclick="shareMatch(${index})" title="مشاركة">📱 مشاركة</button>
+                        <button class="btn warning" onclick="editMatch(${index})" title="تعديل">✏️ تعديل</button>
+                        <button class="btn" onclick="duplicateMatch(${index})" title="تكرار">📋 تكرار</button>
+                        <button class="btn" style="background: var(--danger);" onclick="deleteMatch(${index})" title="حذف">🗑️ حذف</button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = resultsHTML;
+        }
+
+        function updateResultsStats() {
+            if (!allMatches || allMatches.length === 0) {
+                document.getElementById('results-total').textContent = '0';
+                document.getElementById('results-confirmed').textContent = '0';
+                document.getElementById('results-potential').textContent = '0';
+                document.getElementById('results-success-rate').textContent = '0%';
+                return;
+            }
+
+            const total = allMatches.length;
+            const confirmed = allMatches.filter(m => m.quality === 'مؤكدة').length;
+            const potential = allMatches.filter(m => m.quality === 'محتملة').length;
+            const successRate = total > 0 ? Math.round((confirmed / total) * 100) : 0;
+
+            document.getElementById('results-total').textContent = total;
+            document.getElementById('results-confirmed').textContent = confirmed;
+            document.getElementById('results-potential').textContent = potential;
+            document.getElementById('results-success-rate').textContent = successRate + '%';
+        }
+
+        // ===================== Export Functions =====================
+        
+        function exportRequests() {
+            if (requests.length === 0) {
+                showMessage('warning', '⚠️ لا توجد طلبات للتصدير');
+                return;
+            }
+
+            const exportData = {
+                exportDate: new Date().toISOString(),
+                type: 'طلبات عقارية',
+                count: requests.length,
+                data: requests
+            };
+
+            downloadJSON(exportData, `الطلبات_المكتشفة_${Date.now()}.json`);
+            showMessage('success', `📤 تم تصدير ${requests.length} طلب`);
+        }
+
+        function exportOffers() {
+            if (offers.length === 0) {
+                showMessage('warning', '⚠️ لا توجد عروض للتصدير');
+                return;
+            }
+
+            const exportData = {
+                exportDate: new Date().toISOString(),
+                type: 'عروض عقارية',
+                count: offers.length,
+                data: offers
+            };
+
+            downloadJSON(exportData, `العروض_المكتشفة_${Date.now()}.json`);
+            showMessage('success', `📤 تم تصدير ${offers.length} عرض`);
+        }
+
+        function exportResults() {
+            if (!allMatches || allMatches.length === 0) {
+                showMessage('warning', '⚠️ لا توجد نتائج للتصدير');
+                return;
+            }
+
+            const exportData = {
+                exportDate: new Date().toISOString(),
+                type: 'نتائج المطابقة',
+                stats: {
+                    total: allMatches.length,
+                    confirmed: allMatches.filter(m => m.quality === 'مؤكدة').length,
+                    potential: allMatches.filter(m => m.quality === 'محتملة').length,
+                    possible: allMatches.filter(m => m.quality === 'ممكنة').length
+                },
+                data: allMatches
+            };
+
+            downloadJSON(exportData, `نتائج_المطابقة_${Date.now()}.json`);
+            showMessage('success', `📤 تم تصدير ${allMatches.length} نتيجة`);
+        }
+
+        function downloadJSON(data, filename) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
         async function saveToSystemDatabase(fileData) {
             try {
                 // Simulate saving to IndexedDB or localStorage
