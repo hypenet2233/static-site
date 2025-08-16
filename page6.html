@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>تصدير البيانات لنظام المطابقة - صفحة 6</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #111827;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --accent: #22c55e;
+    --accent-2: #3b82f6;
+    --btn-bg: #1f2937;
+    --btn-hover: #374151;
+    --shadow: 0 10px 25px rgba(0,0,0,.35);
+    --radius: 18px;
+    --danger: #ef4444;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Naskh Arabic", Arial, sans-serif;
+    line-height: 1.6;
+  }
+  .wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+  .card {
+    width: min(920px, 96vw); background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow);
+    backdrop-filter: blur(6px);
+  }
+  h1 { margin: 0 0 10px; font-size: clamp(26px, 3.5vw, 40px); letter-spacing: .2px; }
+  p.lead { margin: 0 0 26px; color: var(--muted); }
+  
+  button.btn, a.btn {
+    display: inline-block; text-decoration: none; text-align: center; cursor: pointer;
+    background: var(--btn-bg); color: var(--text); padding: 14px 16px;
+    border-radius: 14px; border: 1px solid rgba(255,255,255,.08);
+    transition: transform .12s ease, background .12s ease, border-color .12s ease;
+    box-shadow: 0 6px 14px rgba(0,0,0,.25);
+    font-family: inherit; font-size: inherit; margin: 4px;
+  }
+  button.btn:hover, a.btn:hover { background: var(--btn-hover); transform: translateY(-1px); }
+  button.btn.primary, a.btn.primary { background: var(--accent-2); border-color: transparent; color: #fff; }
+  button.btn.success { background: var(--accent); border-color: transparent; color: #fff; }
+  
+  .status-section {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: rgba(255,255,255,0.02);
+    border-radius: var(--radius);
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    text-align: center;
+  }
+  .stat-item .stat-number { font-size: 28px; font-weight: bold; color: var(--accent-2); }
+  .stat-item .stat-label { font-size: 12px; color: var(--muted); }
+  
+  .status-message {
+    margin: 16px 0; padding: 14px 18px; border-radius: 12px;
+    text-align: center; font-weight: 500; display: none;
+  }
+  .status-success { background: rgba(34, 197, 94, .1); color: var(--accent); border: 1px solid rgba(34, 197, 94, .2); }
+  .status-error { background: rgba(239, 68, 68, .1); color: var(--danger); border: 1px solid rgba(239, 68, 68, .2); }
+  .status-info { background: rgba(59, 130, 246, .1); color: var(--accent-2); border: 1px solid rgba(59, 130, 246, .2); }
+
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .action-card {
+    background: rgba(255,255,255,.02);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+  }
+  .action-card h3 { margin: 0 0 12px; }
+  .action-card p { font-size: 14px; color: var(--muted); margin: 0 0 16px; }
+</style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1><span style="font-size: 24px;">💾</span> تصدير بيانات المطابقة</h1>
+      <p class="lead">هذه الصفحة تقوم بجمع البيانات الجاهزة للمطابقة من قاعدة البيانات وتصديرها كملفات txt أو json لاستخدامها في نظام المطابقة.</p>
+
+      <div id="status-message" class="status-message"></div>
+
+      <!-- Status Section -->
+      <div class="status-section">
+        <h2>📊 حالة البيانات الجاهزة</h2>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-number" id="total-docs">0</div>
+            <div class="stat-label">إجمالي المستندات</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number" id="request-count">0</div>
+            <div class="stat-label">الطلبات</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number" id="offer-count">0</div>
+            <div class="stat-label">العروض</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-grid">
+        <div class="action-card">
+            <h3>ملفات نصية (TXT)</h3>
+            <p>حفظ الطلبات والعروض في ملفات نصية منفصلة، كل سجل في سطر.</p>
+            <button class="btn" onclick="saveAsTxt('requests')">📄 حفظ الطلبات كـ TXT</button>
+            <button class="btn" onclick="saveAsTxt('offers')">🏠 حفظ العروض كـ TXT</button>
+        </div>
+        <div class="action-card">
+            <h3>ملف JSON متكامل</h3>
+            <p>حفظ جميع الطلبات والعروض في ملف JSON واحد منظم وجاهز للمعالجة الآلية.</p>
+            <button class="btn success" onclick="saveAsJson()">📦 حفظ الكل كـ JSON</button>
+        </div>
+      </div>
+      
+      <div style="margin-top: 24px; text-align: center;">
+        <a class="btn primary" href="page3.html">🚀 الانتقال لنظام المطابقة</a>
+        <a class="btn" href="page2.html">📁 العودة لإدارة الملفات</a>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ===================================================================
+// SCRIPT FOR EXPORTING REAL ESTATE DATA FOR THE MATCHING SYSTEM
+// ===================================================================
+
+const DB_NAME = 'FilesStorage';
+const DB_VERSION = 1;
+const STORE_NAME = 'files';
+let db;
+
+let allTextFiles = [];
+let requests = [];
+let offers = [];
+
+// --- Database Initialization and Data Loading ---
+
+function initDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onerror = () => reject("Error opening database");
+    request.onsuccess = () => {
+      db = request.result;
+      resolve(db);
+    };
+    request.onupgradeneeded = (event) => {
+      db = event.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+      }
+    };
+  });
+}
+
+async function loadAndProcessData() {
+    showMessage('info', '📂 جاري تحميل وتصنيف البيانات من قاعدة البيانات...');
+    return new Promise((resolve, reject) => {
+        if (!db) return reject("Database not initialized");
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.getAll();
+
+        request.onsuccess = async () => {
+            const allFiles = request.result;
+            
+            // Filter for text and json files only
+            allTextFiles = allFiles.filter(file =>
+                (file.type && (file.type.includes('text') || file.type.includes('json'))) ||
+                (file.name && (file.name.endsWith('.txt') || file.name.endsWith('.json')))
+            );
+
+            if (allTextFiles.length === 0) {
+                showMessage('error', '❌ لم يتم العثور على ملفات نصية أو JSON صالحة للمطابقة.');
+                resolve();
+                return;
+            }
+            
+            await classifyAndSeparateFiles();
+            
+            document.getElementById('total-docs').textContent = allTextFiles.length;
+            document.getElementById('request-count').textContent = requests.length;
+            document.getElementById('offer-count').textContent = offers.length;
+            
+            showMessage('success', `✅ تم تحميل وتصنيف ${requests.length} طلب و ${offers.length} عرض بنجاح.`);
+            resolve();
+        };
+
+        request.onerror = () => {
+            showMessage('error', '❌ فشل في قراءة الملفات من قاعدة البيانات.');
+            reject(request.error);
+        };
+    });
+}
+
+function classifyMessageType(text) {
+    if (!text) return 'غير محدد';
+    const textLower = text.toLowerCase();
+    const requestKeywords = ['مطلوب', 'ابحث عن', 'أريد', 'نريد', 'محتاج', 'بحث عن', 'عاوز', 'عايز', 'ادور على', 'أدور على', 'نبحث عن', 'wanted', 'looking for', 'need', 'require'];
+    const offerKeywords = ['للبيع', 'للايجار', 'للإيجار', 'معروض', 'متوفر', 'يوجد', 'عندي', 'لدي', 'متاح', 'للتنازل', 'أعرض', 'for sale', 'for rent', 'available', 'offering'];
+
+    const requestCount = requestKeywords.reduce((sum, keyword) => sum + (textLower.includes(keyword) ? 1 : 0), 0);
+    const offerCount = offerKeywords.reduce((sum, keyword) => sum + (textLower.includes(keyword) ? 1 : 0), 0);
+
+    if (requestCount > offerCount) return 'مطلوب';
+    if (offerCount > requestCount) return 'معروض';
+    return 'غير محدد';
+}
+
+async function classifyAndSeparateFiles() {
+    requests = [];
+    offers = [];
+
+    for (const file of allTextFiles) {
+        try {
+            let textContent = '';
+            if (file.data && file.data.includes(',')) {
+                const base64 = file.data.split(',')[1];
+                if (base64) {
+                    textContent = decodeURIComponent(escape(atob(base64)));
+                }
+            }
+            if (!textContent) continue;
+
+            if (file.name.toLowerCase().endsWith('.json')) {
+                const json = JSON.parse(textContent);
+                if (json.messages && Array.isArray(json.messages)) {
+                    json.messages.forEach(message => {
+                        const messageText = message.original_text || '';
+                        if (messageText.trim()) {
+                            const type = classifyMessageType(messageText);
+                            const info = { text: messageText, source: file.name };
+                            if (type === 'مطلوب') requests.push(info);
+                            else if (type === 'معروض') offers.push(info);
+                        }
+                    });
+                }
+            } else {
+                const type = classifyMessageType(textContent);
+                if (type !== 'غير محدد') {
+                    const info = { text: textContent, source: file.name };
+                    if (type === 'مطلوب') requests.push(info);
+                    else if (type === 'معروض') offers.push(info);
+                }
+            }
+        } catch (e) {
+            console.error(`Failed to process file ${file.name}:`, e);
+        }
+    }
+}
+
+// --- File Saving Functions ---
+
+function downloadFile(filename, content, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function saveAsTxt(type) {
+    const data = (type === 'requests') ? requests : offers;
+    if (data.length === 0) {
+        showMessage('error', `لا توجد ${type === 'requests' ? 'طلبات' : 'عروض'} لحفظها.`);
+        return;
+    }
+    
+    const content = data.map(item => item.text.replace(/\n/g, ' ')).join('\n');
+    const filename = `${type}_${new Date().toISOString().split('T')[0]}.txt`;
+    
+    downloadFile(filename, content, 'text/plain;charset=utf-8');
+    showMessage('success', `✅ تم حفظ ملف ${filename} بنجاح.`);
+}
+
+function saveAsJson() {
+    if (requests.length === 0 && offers.length === 0) {
+        showMessage('error', 'لا توجد بيانات لحفظها في ملف JSON.');
+        return;
+    }
+    
+    const dataToSave = {
+        exportDate: new Date().toISOString(),
+        requests: requests,
+        offers: offers,
+        stats: {
+            requestCount: requests.length,
+            offerCount: offers.length
+        }
+    };
+    
+    const content = JSON.stringify(dataToSave, null, 2);
+    const filename = `real_estate_data_${new Date().toISOString().split('T')[0]}.json`;
+    
+    downloadFile(filename, content, 'application/json;charset=utf-8');
+    showMessage('success', `✅ تم حفظ ملف ${filename} بنجاح.`);
+}
+
+
+// --- UI Feedback ---
+
+function showMessage(type, message) {
+    const statusDiv = document.getElementById('status-message');
+    statusDiv.className = `status-message status-${type}`;
+    statusDiv.textContent = message;
+    statusDiv.style.display = 'block';
+
+    setTimeout(() => {
+        if (statusDiv.textContent === message) {
+            statusDiv.style.display = 'none';
+        }
+    }, 5000);
+}
+
+// --- Initialization on Page Load ---
+
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    await initDB();
+    await loadAndProcessData();
+  } catch (error) {
+    console.error("Initialization failed:", error);
+    showMessage('error', `❌ خطأ فادح في التهيئة: ${error.message || error}`);
+  }
+});
+
+</script>
+</body>
+</html>
