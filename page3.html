@@ -2127,14 +2127,375 @@ ${offersBatch.map((offer, i) => `${i + 1}. ${offer.text}`).join('\n')}
             showMessage('success', `📤 تم تصدير ${allMatches.length} نتيجة`);
         }
 
-        function downloadJSON(data, filename) {
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(url);
+        // ===================== Interactive Functions =====================
+        
+        function findMatchesForRequest(requestIndex) {
+            const request = requests[requestIndex];
+            if (!request) return;
+
+            showMessage('info', `🔍 البحث عن مطابقات للطلب: ${request.text.substring(0, 50)}...`);
+            
+            // تصفية المطابقات التي تحتوي على هذا الطلب
+            const relatedMatches = allMatches.filter(match => 
+                match.request_text && match.request_text.includes(request.text.substring(0, 30))
+            );
+
+            if (relatedMatches.length > 0) {
+                switchTab('results');
+                highlightMatches(relatedMatches);
+                showMessage('success', `✅ تم العثور على ${relatedMatches.length} مطابقة لهذا الطلب`);
+            } else {
+                showMessage('warning', '⚠️ لم يتم العثور على مطابقات لهذا الطلب');
+            }
+        }
+
+        function findMatchesForOffer(offerIndex) {
+            const offer = offers[offerIndex];
+            if (!offer) return;
+
+            showMessage('info', `🔍 البحث عن مطابقات للعرض: ${offer.text.substring(0, 50)}...`);
+            
+            const relatedMatches = allMatches.filter(match => 
+                match.offer_text && match.offer_text.includes(offer.text.substring(0, 30))
+            );
+
+            if (relatedMatches.length > 0) {
+                switchTab('results');
+                highlightMatches(relatedMatches);
+                showMessage('success', `✅ تم العثور على ${relatedMatches.length} مطابقة لهذا العرض`);
+            } else {
+                showMessage('warning', '⚠️ لم يتم العثور على مطابقات لهذا العرض');
+            }
+        }
+
+        function highlightMatches(matches) {
+            // تمييز المطابقات المحددة في واجهة النتائج
+            setTimeout(() => {
+                const matchCards = document.querySelectorAll('.match-card');
+                matchCards.forEach((card, index) => {
+                    if (matches.some(m => allMatches[index] === m)) {
+                        card.style.border = '3px solid var(--accent)';
+                        card.style.boxShadow = '0 0 20px rgba(34, 197, 94, 0.3)';
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            }, 500);
+        }
+
+        function copyRequestText(index) {
+            const request = requests[index];
+            if (request) {
+                navigator.clipboard.writeText(request.text);
+                showMessage('success', '📋 تم نسخ نص الطلب');
+            }
+        }
+
+        function copyOfferText(index) {
+            const offer = offers[index];
+            if (offer) {
+                navigator.clipboard.writeText(offer.text);
+                showMessage('success', '📋 تم نسخ نص العرض');
+            }
+        }
+
+        function editRequest(index) {
+            const request = requests[index];
+            if (!request) return;
+
+            const newText = prompt('تعديل نص الطلب:', request.text);
+            if (newText && newText.trim()) {
+                requests[index].text = newText.trim();
+                displayRequests();
+                updateTabCounters();
+                showMessage('success', '✅ تم تحديث الطلب');
+                
+                // حفظ التغييرات
+                saveDataToStorage();
+            }
+        }
+
+        function editOffer(index) {
+            const offer = offers[index];
+            if (!offer) return;
+
+            const newText = prompt('تعديل نص العرض:', offer.text);
+            if (newText && newText.trim()) {
+                offers[index].text = newText.trim();
+                displayOffers();
+                updateTabCounters();
+                showMessage('success', '✅ تم تحديث العرض');
+                
+                // حفظ التغييرات
+                saveDataToStorage();
+            }
+        }
+
+        function exportMatch(index) {
+            const match = allMatches[index];
+            if (!match) return;
+
+            const exportData = {
+                exportDate: new Date().toISOString(),
+                matchNumber: index + 1,
+                match: match
+            };
+
+            downloadJSON(exportData, `مطابقة_${index + 1}_${Date.now()}.json`);
+            showMessage('success', `📤 تم تصدير المطابقة ${index + 1}`);
+        }
+
+        function shareMatch(index) {
+            const match = allMatches[index];
+            if (!match) return;
+
+            const shareText = `🏠 مطابقة عقارية ${match.quality}
+
+📍 المنطقة: ${match.area || 'غير محدد'}
+💰 سعر الطلب: ${match.requested_price || 'غير محدد'}
+💰 سعر العرض: ${match.offered_price || 'غير محدد'}
+
+📝 الطلب: ${match.request_text}
+🏠 العرض: ${match.offer_text}
+
+💡 سبب المطابقة: ${match.reason}`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'مطابقة عقارية',
+                    text: shareText
+                });
+            } else {
+                navigator.clipboard.writeText(shareText);
+                showMessage('success', '📋 تم نسخ تفاصيل المطابقة للمشاركة');
+            }
+        }
+
+        function deleteMatch(index) {
+            if (confirm(`🗑️ هل أنت متأكد من حذف المطابقة ${index + 1}؟`)) {
+                allMatches.splice(index, 1);
+                displayResults();
+                updateTabCounters();
+                showMessage('success', '✅ تم حذف المطابقة');
+                
+                // حفظ التغييرات
+                saveMatchingResults(allMatches);
+            }
+        }
+
+        function duplicateMatch(index) {
+            const match = allMatches[index];
+            if (!match) return;
+
+            const duplicated = { ...match };
+            duplicated.reason = duplicated.reason + ' (نسخة)';
+            
+            allMatches.push(duplicated);
+            displayResults();
+            updateTabCounters();
+            showMessage('success', '✅ تم تكرار المطابقة');
+            
+            // حفظ التغييرات
+            saveMatchingResults(allMatches);
+        }
+
+        function clearAllResults() {
+            if (confirm('🗑️ هل أنت متأكد من حذف جميع النتائج؟ هذا الإجراء لا يمكن التراجع عنه!')) {
+                allMatches = [];
+                displayResults();
+                updateTabCounters();
+                showMessage('success', '✅ تم مسح جميع النتائج');
+                
+                // مسح من التخزين
+                localStorage.removeItem('smart_matching_results');
+            }
+        }
+
+        // ===================== Advanced Analysis Functions =====================
+        
+        function analyzeRequestsPatterns() {
+            if (requests.length === 0) {
+                showMessage('warning', '⚠️ لا توجد طلبات للتحليل');
+                return;
+            }
+
+            showMessage('info', '📊 جاري تحليل أنماط الطلبات...');
+
+            const patterns = {
+                propertyTypes: {},
+                priceRanges: {},
+                locations: {},
+                totalWithPrices: 0,
+                totalWithPhones: 0
+            };
+
+            requests.forEach(request => {
+                const text = request.text.toLowerCase();
+                
+                // تحليل أنواع العقارات
+                if (text.includes('شقة')) patterns.propertyTypes['شقة'] = (patterns.propertyTypes['شقة'] || 0) + 1;
+                if (text.includes('فيلا')) patterns.propertyTypes['فيلا'] = (patterns.propertyTypes['فيلا'] || 0) + 1;
+                if (text.includes('أرض')) patterns.propertyTypes['أرض'] = (patterns.propertyTypes['أرض'] || 0) + 1;
+                if (text.includes('محل')) patterns.propertyTypes['محل'] = (patterns.propertyTypes['محل'] || 0) + 1;
+                
+                // تحليل المواقع
+                if (text.includes('رياض')) patterns.locations['الرياض'] = (patterns.locations['الرياض'] || 0) + 1;
+                if (text.includes('جدة')) patterns.locations['جدة'] = (patterns.locations['جدة'] || 0) + 1;
+                if (text.includes('دمام')) patterns.locations['الدمام'] = (patterns.locations['الدمام'] || 0) + 1;
+                if (text.includes('مكة')) patterns.locations['مكة'] = (patterns.locations['مكة'] || 0) + 1;
+                
+                // عد الطلبات التي تحتوي على أسعار وهواتف
+                if (request.prices && request.prices.length > 0) patterns.totalWithPrices++;
+                if (request.phones && request.phones.length > 0) patterns.totalWithPhones++;
+            });
+
+            displayPatternsAnalysis('الطلبات', patterns, requests.length);
+        }
+
+        function analyzeOffersPatterns() {
+            if (offers.length === 0) {
+                showMessage('warning', '⚠️ لا توجد عروض للتحليل');
+                return;
+            }
+
+            showMessage('info', '📊 جاري تحليل أنماط العروض...');
+
+            const patterns = {
+                propertyTypes: {},
+                priceRanges: {},
+                locations: {},
+                totalWithPrices: 0,
+                totalWithPhones: 0
+            };
+
+            offers.forEach(offer => {
+                const text = offer.text.toLowerCase();
+                
+                // تحليل أنواع العقارات
+                if (text.includes('شقة')) patterns.propertyTypes['شقة'] = (patterns.propertyTypes['شقة'] || 0) + 1;
+                if (text.includes('فيلا')) patterns.propertyTypes['فيلا'] = (patterns.propertyTypes['فيلا'] || 0) + 1;
+                if (text.includes('أرض')) patterns.propertyTypes['أرض'] = (patterns.propertyTypes['أرض'] || 0) + 1;
+                if (text.includes('محل')) patterns.propertyTypes['محل'] = (patterns.propertyTypes['محل'] || 0) + 1;
+                
+                // تحليل المواقع
+                if (text.includes('رياض')) patterns.locations['الرياض'] = (patterns.locations['الرياض'] || 0) + 1;
+                if (text.includes('جدة')) patterns.locations['جدة'] = (patterns.locations['جدة'] || 0) + 1;
+                if (text.includes('دمام')) patterns.locations['الدمام'] = (patterns.locations['الدمام'] || 0) + 1;
+                if (text.includes('مكة')) patterns.locations['مكة'] = (patterns.locations['مكة'] || 0) + 1;
+                
+                // عد العروض التي تحتوي على أسعار وهواتف
+                if (offer.prices && offer.prices.length > 0) patterns.totalWithPrices++;
+                if (offer.phones && offer.phones.length > 0) patterns.totalWithPhones++;
+            });
+
+            displayPatternsAnalysis('العروض', patterns, offers.length);
+        }
+
+        function displayPatternsAnalysis(type, patterns, total) {
+            const analysisDiv = document.getElementById('analysis-results');
+            if (!analysisDiv) return;
+
+            const analysisHTML = `
+                <div class="analytics-card" style="margin-bottom: 20px;">
+                    <h4>📊 تحليل أنماط ${type}</h4>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                        <div class="stat-item">
+                            <div class="stat-number">${total}</div>
+                            <div class="stat-label">إجمالي ${type}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${patterns.totalWithPrices}</div>
+                            <div class="stat-label">تحتوي على أسعار</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${patterns.totalWithPhones}</div>
+                            <div class="stat-label">تحتوي على هواتف</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${Math.round((patterns.totalWithPrices / total) * 100)}%</div>
+                            <div class="stat-label">نسبة الأسعار</div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <h5>🏠 أنواع العقارات:</h5>
+                            <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+                                ${Object.entries(patterns.propertyTypes).map(([type, count]) => 
+                                    `<div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                        <span>${type}</span>
+                                        <span style="font-weight: bold; color: var(--accent);">${count}</span>
+                                    </div>`
+                                ).join('') || '<div style="color: var(--muted);">لا توجد بيانات</div>'}
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h5>📍 المواقع:</h5>
+                            <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+                                ${Object.entries(patterns.locations).map(([location, count]) => 
+                                    `<div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                        <span>${location}</span>
+                                        <span style="font-weight: bold; color: var(--accent-2);">${count}</span>
+                                    </div>`
+                                ).join('') || '<div style="color: var(--muted);">لا توجد بيانات</div>'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            analysisDiv.innerHTML = analysisHTML;
+            switchTab('analysis');
+            showMessage('success', `✅ تم تحليل أنماط ${type}`);
+        }
+
+        // ===================== Data Management =====================
+        
+        function saveDataToStorage() {
+            try {
+                const data = {
+                    requests: requests,
+                    offers: offers,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem('smart_extracted_data', JSON.stringify(data));
+                logToSearch('💾 تم حفظ البيانات المستخرجة', 'success');
+            } catch (error) {
+                logToSearch(`❌ فشل حفظ البيانات: ${error.message}`, 'error');
+            }
+        }
+
+        function loadDataFromStorage() {
+            try {
+                const stored = localStorage.getItem('smart_extracted_data');
+                if (stored) {
+                    const data = JSON.parse(stored);
+                    if (data.requests) requests.push(...data.requests);
+                    if (data.offers) offers.push(...data.offers);
+                    
+                    updateTabCounters();
+                    updateSystemStats();
+                    logToSearch(`📚 تم تحميل البيانات المحفوظة`, 'success');
+                }
+            } catch (error) {
+                logToSearch(`❌ فشل تحميل البيانات: ${error.message}`, 'error');
+            }
+        }
+
+        function refreshRequestsView() {
+            displayRequests();
+            showMessage('info', '🔄 تم تحديث عرض الطلبات');
+        }
+
+        function refreshOffersView() {
+            displayOffers();
+            showMessage('info', '🔄 تم تحديث عرض العروض');
+        }
+
+        function refreshResultsView() {
+            displayResults();
+            showMessage('info', '🔄 تم تحديث عرض النتائج');
         }
         async function saveToSystemDatabase(fileData) {
             try {
@@ -2408,11 +2769,41 @@ ${offersBatch.map((offer, i) => `${i + 1}. ${offer.text}`).join('\n')}
             
             // Load saved data
             await loadFromSystemDatabase();
+            await loadDataFromStorage();
+            
+            // Load saved matching results
+            try {
+                const savedResults = localStorage.getItem('smart_matching_results');
+                if (savedResults) {
+                    const resultsData = JSON.parse(savedResults);
+                    if (resultsData.matches && Array.isArray(resultsData.matches)) {
+                        allMatches = resultsData.matches;
+                        logToSearch(`📊 تم تحميل ${allMatches.length} نتيجة مطابقة محفوظة`, 'success');
+                    }
+                }
+            } catch (error) {
+                logToSearch(`❌ فشل تحميل النتائج المحفوظة: ${error.message}`, 'error');
+            }
+            
+            // Update all counters and displays
+            updateTabCounters();
+            updateSystemStats();
             
             // Update performance monitor
             setInterval(updatePerformanceStats, 5000);
             
+            // Auto-refresh data every 30 seconds
+            setInterval(() => {
+                updateTabCounters();
+                updateSystemStats();
+            }, 30000);
+            
             showMessage('success', '🧠 النظام الذكي المطور جاهز! ابدأ البحث لاكتشاف الملفات');
+            
+            // إذا كان هناك بيانات محفوظة، اعرضها
+            if (requests.length > 0 || offers.length > 0) {
+                showMessage('info', `📚 تم العثور على بيانات محفوظة: ${requests.length} طلب، ${offers.length} عرض`);
+            }
         });
 
         // ===================== Enhanced Error Handling =====================
