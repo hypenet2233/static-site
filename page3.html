@@ -1,407 +1,353 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>نظام مطابقة العقارات الذكي المطور - مع البحث المتقدم</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>مطابقة العقارات الذكي</title>
     <style>
-        /* ===================== CSS Variables and Global Styles ===================== */
         :root {
             --bg: #0f172a;
-            --card: #111827;
-            --text: #e5e7eb;
-            --muted: #9ca3af;
+            --card: #1e293b;
+            --text: #f1f5f9;
             --accent: #22c55e;
-            --accent-2: #3b82f6;
-            --accent-3: #f59e0b;
-            --accent-4: #8b5cf6;
-            --btn-bg: #1f2937;
-            --btn-hover: #374151;
-            --shadow: 0 10px 25px rgba(0, 0, 0, .35);
-            --radius: 18px;
-            --danger: #ef4444;
+            --primary: #3b82f6;
             --warning: #f59e0b;
+            --danger: #ef4444;
+            --radius: 16px;
         }
 
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
 
-        html,
         body {
-            margin: 0;
-            padding: 0;
             background: var(--bg);
             color: var(--text);
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Naskh Arabic", Arial, sans-serif;
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Arial', sans-serif;
+            padding: 10px;
+            overflow-x: hidden;
         }
 
-        /* ===================== Layout and Card Styles ===================== */
-        .wrap {
-            min-height: 100vh;
-            display: grid;
-            place-items: center;
-            padding: 24px;
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
         }
 
-        .card {
-            width: min(1400px, 96vw);
-            background: linear-gradient(180deg, rgba(255, 255, 255, .02), rgba(255, 255, 255, .01));
-            border: 1px solid rgba(255, 255, 255, .08);
+        .header {
+            background: var(--card);
+            padding: 15px;
             border-radius: var(--radius);
-            padding: 28px;
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(6px);
+            margin-bottom: 15px;
+            text-align: center;
         }
 
         h1 {
-            margin: 0 0 10px;
-            font-size: clamp(26px, 3.5vw, 40px);
-            letter-spacing: .2px;
+            font-size: 24px;
+            margin-bottom: 5px;
         }
 
-        p.lead {
-            margin: 0 0 26px;
-            color: var(--muted);
-        }
-
-        /* ===================== Smart Search Panel ===================== */
-        .smart-search-panel {
-            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(59, 130, 246, 0.1));
-            border: 2px solid rgba(34, 197, 94, 0.3);
-            border-radius: var(--radius);
-            padding: 24px;
-            margin-bottom: 24px;
-        }
-
-        .smart-search-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .smart-search-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: var(--accent);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .search-paths-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .search-path-item {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 16px;
-            position: relative;
-        }
-
-        .search-path-item.active {
-            border-color: var(--accent);
-            background: rgba(34, 197, 94, 0.1);
-        }
-
-        .search-path-item.scanning {
-            border-color: var(--warning);
-            background: rgba(245, 158, 11, 0.1);
-        }
-
-        .path-checkbox {
-            margin-left: 8px;
-            width: 18px;
-            height: 18px;
-        }
-
-        .path-status {
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            font-size: 20px;
-        }
-
-        /* ===================== AI Analysis Panel ===================== */
-        .ai-analysis-panel {
-            background: rgba(139, 92, 246, 0.1);
-            border: 2px solid rgba(139, 92, 246, 0.3);
-            border-radius: var(--radius);
-            padding: 20px;
-            margin-bottom: 24px;
-        }
-
-        .analysis-progress {
-            width: 100%;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            overflow: hidden;
-            margin: 16px 0;
-        }
-
-        .analysis-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent), var(--accent-2));
-            width: 0%;
-            transition: width 0.5s ease;
-            position: relative;
-        }
-
-        .analysis-progress-bar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        /* ===================== Tabs Navigation ===================== */
-        .tab-nav {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 24px;
-            border-bottom: 1px solid rgba(255, 255, 255, .1);
-            padding-bottom: 16px;
-        }
-
-        .tab-btn {
-            padding: 12px 20px;
-            background: var(--btn-bg);
-            color: var(--text);
-            border: 1px solid rgba(255, 255, 255, .08);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all .2s ease;
+        .subtitle {
+            color: #94a3b8;
             font-size: 14px;
         }
 
-        .tab-btn:hover {
-            background: var(--btn-hover);
+        /* Main Action Buttons */
+        .main-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
-        .tab-btn.active {
-            background: var(--accent-2);
-            border-color: var(--accent-2);
+        .big-btn {
+            background: linear-gradient(135deg, var(--primary), #2563eb);
             color: white;
+            border: none;
+            padding: 20px 15px;
+            border-radius: var(--radius);
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
         }
 
-        .tab-content {
-            display: none;
+        .big-btn:active {
+            transform: scale(0.98);
         }
 
-        .tab-content.active {
+        .big-btn.success {
+            background: linear-gradient(135deg, var(--accent), #16a34a);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+
+        .big-btn .icon {
+            font-size: 32px;
+        }
+
+        /* File Input Section */
+        .file-section {
+            background: var(--card);
+            padding: 20px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
             display: block;
         }
 
-        /* ===================== Buttons and Links ===================== */
-        button.btn,
-        a.btn {
-            display: inline-block;
-            text-decoration: none;
+        input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-label {
+            display: block;
+            background: linear-gradient(135deg, var(--warning), #d97706);
+            color: white;
+            padding: 20px;
+            border-radius: var(--radius);
             text-align: center;
             cursor: pointer;
-            background: var(--btn-bg);
-            color: var(--text);
-            padding: 14px 16px;
-            border-radius: 14px;
-            border: 1px solid rgba(255, 255, 255, .08);
-            transition: transform .12s ease, background .12s ease, border-color .12s ease;
-            box-shadow: 0 6px 14px rgba(0, 0, 0, .25);
-            font-family: inherit;
-            font-size: inherit;
-            margin: 4px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
         }
 
-        button.btn:hover,
-        a.btn:hover {
-            background: var(--btn-hover);
-            transform: translateY(-1px);
+        .file-label:active {
+            transform: scale(0.98);
         }
 
-        button.btn.primary {
-            background: var(--accent-2);
-            border-color: transparent;
-            color: #fff;
+        .file-label .icon {
+            font-size: 40px;
+            display: block;
+            margin-bottom: 10px;
         }
 
-        button.btn.success {
-            background: var(--accent);
-            border-color: transparent;
-            color: #fff;
-        }
-
-        button.btn.warning {
-            background: var(--warning);
-            border-color: transparent;
-            color: #fff;
-        }
-
-        button.btn.purple {
-            background: var(--accent-4);
-            border-color: transparent;
-            color: #fff;
-        }
-
-        button.btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        /* ===================== File Discovery Panel ===================== */
-        .discovery-panel {
-            background: rgba(245, 158, 11, 0.1);
-            border: 2px solid rgba(245, 158, 11, 0.3);
-            border-radius: var(--radius);
-            padding: 20px;
-            margin-bottom: 24px;
-        }
-
-        .discovered-files {
-            max-height: 300px;
+        /* Selected Files Display */
+        .selected-files {
+            margin-top: 15px;
+            max-height: 200px;
             overflow-y: auto;
-            margin-top: 16px;
         }
 
-        .discovered-file-item {
+        .file-item {
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
             padding: 12px;
+            border-radius: 10px;
             margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .file-info {
+        .file-item .name {
+            font-size: 14px;
             flex: 1;
+            margin-right: 10px;
+            word-break: break-word;
         }
 
-        .file-path {
-            font-family: monospace;
+        .file-item .size {
             font-size: 12px;
-            color: var(--muted);
-            word-break: break-all;
+            color: #94a3b8;
         }
 
-        .file-size {
-            font-size: 11px;
-            color: var(--accent-3);
+        .remove-file {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
         }
 
-        /* ===================== Sections and Status ===================== */
-        .status-section,
-        .controls-section,
-        .results-section,
-        .analytics-section,
-        .crm-section {
-            margin-bottom: 24px;
-            padding: 16px;
-            background: rgba(255, 255, 255, 0.02);
+        /* API Key Section */
+        .api-section {
+            background: var(--card);
+            padding: 15px;
             border-radius: var(--radius);
+            margin-bottom: 20px;
+        }
+
+        .api-input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        input[type="text"], input[type="password"] {
+            flex: 1;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn:active {
+            opacity: 0.8;
+        }
+
+        .btn.success {
+            background: var(--accent);
+        }
+
+        .btn.warning {
+            background: var(--warning);
+        }
+
+        /* Status Messages */
+        .status {
+            padding: 15px;
+            border-radius: var(--radius);
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status.info {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid var(--primary);
+            color: #60a5fa;
+        }
+
+        .status.success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid var(--accent);
+            color: #4ade80;
+        }
+
+        .status.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid var(--danger);
+            color: #f87171;
+        }
+
+        /* Results Section */
+        .results-section {
+            background: var(--card);
+            padding: 20px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
             text-align: center;
         }
 
-        .stat-item .stat-number {
+        .stat-number {
             font-size: 28px;
             font-weight: bold;
-            color: var(--accent-2);
+            color: var(--primary);
         }
 
-        .stat-item .stat-label {
+        .stat-label {
             font-size: 12px;
-            color: var(--muted);
+            color: #94a3b8;
+            margin-top: 5px;
         }
 
-        /* ===================== Filter Controls ===================== */
-        .filter-section {
-            background: rgba(255, 255, 255, 0.03);
+        /* Matches Display */
+        .matches-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .match-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
             border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
+            margin-bottom: 15px;
+            border: 2px solid transparent;
         }
 
-        .filter-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 12px;
-            align-items: end;
+        .match-card.confirmed {
+            border-color: var(--accent);
         }
 
-        .filter-item label {
-            display: block;
-            margin-bottom: 4px;
+        .match-card.potential {
+            border-color: var(--warning);
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .match-quality {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .match-quality.مؤكدة {
+            background: var(--accent);
+        }
+
+        .match-quality.محتملة {
+            background: var(--warning);
+        }
+
+        .match-quality.ممكنة {
+            background: var(--primary);
+        }
+
+        .match-details {
             font-size: 14px;
-            color: var(--muted);
+            line-height: 1.6;
         }
 
-        .filter-item select,
-        .filter-item input {
-            width: 100%;
-            padding: 8px 12px;
-            background: var(--btn-bg);
-            border: 1px solid rgba(255, 255, 255, .08);
-            border-radius: 8px;
-            color: var(--text);
-            font-family: inherit;
+        .match-details strong {
+            color: var(--primary);
         }
 
-        /* ===================== Match Results Enhancement ===================== */
-        #status-message {
-            padding: 12px;
-            border-radius: 10px;
-            text-align: center;
-            display: none;
-            margin-bottom: 16px;
-        }
-
-        #status-message.info {
-            background: rgba(59, 130, 246, .1);
-            color: var(--accent-2);
-            border: 1px solid rgba(59, 130, 246, .2);
-        }
-
-        #status-message.success {
-            background: rgba(34, 197, 94, .1);
-            color: var(--accent);
-            border: 1px solid rgba(34, 197, 94, .2);
-        }
-
-        #status-message.error {
-            background: rgba(239, 68, 68, .1);
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, .2);
-        }
-
+        /* Loading Spinner */
         .loader {
-            border: 4px solid var(--btn-bg);
-            border-top: 4px solid var(--accent-2);
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid var(--primary);
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
             margin: 20px auto;
             display: none;
@@ -412,1198 +358,367 @@
             100% { transform: rotate(360deg); }
         }
 
-        .matches-container {
-            display: grid;
-            gap: 16px;
-            grid-template-columns: 1fr;
-        }
-
-        .match-card {
-            background: var(--card);
-            border: 1px solid rgba(255, 255, 255, .1);
-            border-radius: var(--radius);
-            padding: 20px;
-            position: relative;
-        }
-
-        .match-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, .1);
-            padding-bottom: 12px;
-        }
-
-        .match-quality {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .match-quality.مؤكدة {
-            background: #10b981;
-            color: #fff;
-        }
-
-        .match-quality.محتملة {
-            background: #f59e0b;
-            color: #fff;
-        }
-
-        .match-quality.ممكنة {
-            background: #3b82f6;
-            color: #fff;
-        }
-
-        /* ===================== Smart Search Status ===================== */
-        .search-status {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            padding: 12px;
-            margin: 12px 0;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .search-log-entry {
-            margin: 4px 0;
-            padding: 2px 0;
-        }
-
-        .log-success { color: var(--accent); }
-        .log-error { color: var(--danger); }
-        .log-warning { color: var(--warning); }
-        .log-info { color: var(--accent-2); }
-
-        /* ===================== Responsive Design ===================== */
-        @media (max-width: 768px) {
-            .filter-grid {
-                grid-template-columns: 1fr;
+        /* Responsive for tablets */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 900px;
             }
-            .search-paths-grid {
-                grid-template-columns: 1fr;
+            
+            .main-actions {
+                grid-template-columns: repeat(3, 1fr);
             }
-            .tab-nav {
-                flex-wrap: wrap;
+            
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
             }
         }
 
-        /* ===================== Permission Request Modal ===================== */
-        .permission-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+        /* Hide scrollbar but keep functionality */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
 
-        .permission-modal-content {
-            background: var(--card);
-            border-radius: var(--radius);
-            padding: 30px;
-            max-width: 500px;
-            text-align: center;
-            border: 2px solid var(--accent);
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
         }
 
-        .permission-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
         }
     </style>
 </head>
-
 <body>
-    <!-- Permission Request Modal -->
-    <div id="permission-modal" class="permission-modal">
-        <div class="permission-modal-content">
-            <div class="permission-icon">🔒</div>
-            <h3>طلب صلاحيات متقدمة</h3>
-            <p>يحتاج النظام الذكي للوصول إلى ملفات النظام للبحث عن البيانات العقارية</p>
-            <button class="btn success" onclick="requestPermissions()">منح الصلاحيات</button>
-            <button class="btn" onclick="closePermissionModal()">إلغاء</button>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🏠 مطابقة العقارات الذكي</h1>
+            <div class="subtitle">نظام AI لتحليل ومطابقة العروض والطلبات العقارية</div>
         </div>
-    </div>
 
-    <div class="wrap">
-        <div class="card">
-            <h1><span style="font-size: 24px;">🧠</span> نظام مطابقة العقارات الذكي المطور</h1>
-            <p class="lead">نظام ذكي متقدم مع البحث العميق في ملفات الأندرويد واستخلاص البيانات بالذكاء الاصطناعي</p>
+        <!-- Status Message -->
+        <div id="status" class="status"></div>
 
-            <!-- Smart Search Panel -->
-            <div class="smart-search-panel">
-                <div class="smart-search-header">
-                    <div class="smart-search-title">
-                        🔍 البحث الذكي المتقدم
-                        <span id="search-status-indicator" style="font-size: 12px; color: var(--muted);">جاهز</span>
+        <!-- File Selection Section -->
+        <div class="file-section">
+            <div class="file-input-wrapper">
+                <input type="file" id="fileInput" multiple accept=".txt,.json" />
+                <label for="fileInput" class="file-label">
+                    <span class="icon">📁</span>
+                    اضغط لاختيار ملفات من جهازك
+                    <div style="font-size: 14px; margin-top: 5px; opacity: 0.8;">
+                        TXT أو JSON - يمكن اختيار عدة ملفات
                     </div>
-                    <button class="btn success" onclick="startSmartSearch()">🚀 بدء البحث الذكي</button>
+                </label>
+            </div>
+            <div id="selectedFiles" class="selected-files"></div>
+        </div>
+
+        <!-- Main Action Buttons -->
+        <div class="main-actions">
+            <button class="big-btn" onclick="processFiles()">
+                <span class="icon">📊</span>
+                تحليل الملفات
+            </button>
+            <button class="big-btn success" onclick="startMatching()">
+                <span class="icon">🤖</span>
+                بدء المطابقة
+            </button>
+            <button class="big-btn" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);" onclick="exportResults()">
+                <span class="icon">💾</span>
+                تصدير النتائج
+            </button>
+        </div>
+
+        <!-- API Key Section -->
+        <div class="api-section">
+            <h3 style="font-size: 16px; margin-bottom: 10px;">🔑 مفتاح OpenAI</h3>
+            <div class="api-input-group">
+                <input type="password" id="apiKey" placeholder="أدخل مفتاح OpenAI API" />
+                <button class="btn" onclick="saveApiKey()">حفظ</button>
+                <button class="btn warning" onclick="testApiKey()">اختبار</button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <h3 style="font-size: 18px; margin-bottom: 15px;">📈 نتائج التحليل</h3>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalFiles">0</div>
+                    <div class="stat-label">الملفات</div>
                 </div>
-
-                <div class="search-paths-grid">
-                    <div class="search-path-item" data-path="/storage/emulated/0/">
-                        <input type="checkbox" class="path-checkbox" checked>
-                        <div class="path-status">📁</div>
-                        <h4>التخزين الداخلي</h4>
-                        <div class="file-path">/storage/emulated/0/</div>
-                        <div class="file-size">المجلدات الرئيسية</div>
-                    </div>
-                    
-                    <div class="search-path-item" data-path="/sdcard/">
-                        <input type="checkbox" class="path-checkbox" checked>
-                        <div class="path-status">💾</div>
-                        <h4>بطاقة الذاكرة</h4>
-                        <div class="file-path">/sdcard/</div>
-                        <div class="file-size">الملفات الخارجية</div>
-                    </div>
-
-                    <div class="search-path-item" data-path="/storage/">
-                        <input type="checkbox" class="path-checkbox" checked>
-                        <div class="path-status">🗂️</div>
-                        <h4>جذر التخزين</h4>
-                        <div class="file-path">/storage/</div>
-                        <div class="file-size">جميع وحدات التخزين</div>
-                    </div>
-
-                    <div class="search-path-item" data-path="/data/">
-                        <input type="checkbox" class="path-checkbox">
-                        <div class="path-status">⚠️</div>
-                        <h4>بيانات التطبيقات</h4>
-                        <div class="file-path">/data/</div>
-                        <div class="file-size">يتطلب صلاحيات خاصة</div>
-                    </div>
-
-                    <div class="search-path-item" data-path="Downloads">
-                        <input type="checkbox" class="path-checkbox" checked>
-                        <div class="path-status">⬇️</div>
-                        <h4>مجلد التحميلات</h4>
-                        <div class="file-path">Downloads/</div>
-                        <div class="file-size">الملفات المحملة</div>
-                    </div>
-
-                    <div class="search-path-item" data-path="Documents">
-                        <input type="checkbox" class="path-checkbox" checked>
-                        <div class="path-status">📄</div>
-                        <h4>المستندات</h4>
-                        <div class="file-path">Documents/</div>
-                        <div class="file-size">الملفات النصية</div>
-                    </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalRequests">0</div>
+                    <div class="stat-label">الطلبات</div>
                 </div>
-
-                <div class="search-status" id="search-log">
-                    <div class="search-log-entry log-info">📡 نظام البحث الذكي جاهز للعمل...</div>
-                    <div class="search-log-entry log-info">🔍 يمكن البحث في ملفات TXT و JSON تلقائياً</div>
-                    <div class="search-log-entry log-info">🤖 AI جاهز لتحليل العروض والطلبات العقارية</div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalOffers">0</div>
+                    <div class="stat-label">العروض</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalMatches">0</div>
+                    <div class="stat-label">المطابقات</div>
                 </div>
             </div>
 
-            <!-- AI Analysis Panel -->
-            <div class="ai-analysis-panel">
-                <h3>🤖 تحليل الذكاء الاصطناعي المتقدم</h3>
-                <div class="analysis-progress">
-                    <div class="analysis-progress-bar" id="ai-progress"></div>
-                </div>
-                <div id="ai-status">جاهز لتحليل الملفات المكتشفة بالذكاء الاصطناعي</div>
-            </div>
-
-            <!-- File Discovery Panel -->
-            <div class="discovery-panel">
-                <h3>📂 الملفات المكتشفة (<span id="discovered-count">0</span>)</h3>
-                <div class="discovered-files" id="discovered-files"></div>
-            </div>
-
-            <!-- Tab Navigation -->
-            <div class="tab-nav">
-                <button class="tab-btn active" onclick="switchTab('matching')">🤖 المطابقة الذكية</button>
-                <button class="tab-btn" onclick="switchTab('requests')">📝 الطلبات المكتشفة (<span id="requests-tab-count">0</span>)</button>
-                <button class="tab-btn" onclick="switchTab('offers')">🏠 العروض المكتشفة (<span id="offers-tab-count">0</span>)</button>
-                <button class="tab-btn" onclick="switchTab('results')">🎯 نتائج المطابقة (<span id="results-tab-count">0</span>)</button>
-                <button class="tab-btn" onclick="switchTab('discovery')">🔍 اكتشاف الملفات</button>
-            </div>
-
-            <!-- Matching Tab -->
-            <div id="matching-tab" class="tab-content active">
-                <!-- Status Section -->
-                <div class="status-section">
-                    <h2>📊 حالة البيانات المكتشفة</h2>
-                    <div id="status-message"></div>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-number" id="total-docs">0</div>
-                            <div class="stat-label">إجمالي المستندات</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number" id="request-count">0</div>
-                            <div class="stat-label">الطلبات</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number" id="offer-count">0</div>
-                            <div class="stat-label">العروض</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number" id="matches-count">0</div>
-                            <div class="stat-label">المطابقات المكتشفة</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Enhanced Filter Section -->
-                <div class="filter-section">
-                    <h3>🔍 تصفية النتائج</h3>
-                    <div class="filter-grid">
-                        <div class="filter-item">
-                            <label>جودة المطابقة</label>
-                            <select id="quality-filter">
-                                <option value="">جميع المستويات</option>
-                                <option value="مؤكدة">مؤكدة</option>
-                                <option value="محتملة">محتملة</option>
-                                <option value="ممكنة">ممكنة</option>
-                            </select>
-                        </div>
-                        <div class="filter-item">
-                            <label>نوع العقار</label>
-                            <select id="property-type-filter">
-                                <option value="">جميع الأنواع</option>
-                                <option value="شقة">شقة</option>
-                                <option value="فيلا">فيلا</option>
-                                <option value="أرض">أرض</option>
-                                <option value="محل">محل تجاري</option>
-                                <option value="مكتب">مكتب</option>
-                            </select>
-                        </div>
-                        <div class="filter-item">
-                            <label>نطاق السعر (من)</label>
-                            <input type="number" id="price-min" placeholder="الحد الأدنى">
-                        </div>
-                        <div class="filter-item">
-                            <label>نطاق السعر (إلى)</label>
-                            <input type="number" id="price-max" placeholder="الحد الأعلى">
-                        </div>
-                        <div class="filter-item">
-                            <button class="btn primary" onclick="applyFilters()">تطبيق التصفية</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Controls Section -->
-                <div class="controls-section" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-                    <button class="btn success" id="start-matching-btn" onclick="runSmartMatching()">🧠 بدء المطابقة الذكية</button>
-                    <button class="btn" onclick="promptAndSaveApiKey()">🔑 إعداد مفتاح OpenAI</button>
-                    <button class="btn" onclick="testApiKey()">🧪 اختبار المفتاح</button>
-                    <button class="btn warning" onclick="deepScanSystem()">🔬 فحص عميق للنظام</button>
-                    <button class="btn purple" onclick="aiAutoDiscover()">🤖 اكتشاف تلقائي بالـ AI</button>
-                </div>
-
-                <!-- Results Section -->
-                <div class="results-section">
-                    <h2>💡 نتائج المطابقة الذكية</h2>
-                    <div id="loader" class="loader"></div>
-                    <div id="matches-container" class="matches-container"></div>
-                    <p id="no-results" style="color: var(--muted); text-align: center; display: block;">ابدأ البحث الذكي لاكتشاف الملفات وتحليل المطابقات تلقائياً</p>
-                </div>
-            </div>
-
-            <!-- Requests Tab -->
-            <div id="requests-tab" class="tab-content">
-                <div class="analytics-section">
-                    <h2>📝 الطلبات المكتشفة من الملفات</h2>
-                    <div style="margin-bottom: 16px;">
-                        <button class="btn success" onclick="exportRequests()">📤 تصدير الطلبات</button>
-                        <button class="btn" onclick="refreshRequestsView()">🔄 تحديث</button>
-                        <button class="btn primary" onclick="analyzeRequestsPatterns()">📊 تحليل الأنماط</button>
-                    </div>
-                    <div id="requests-container"></div>
-                </div>
-            </div>
-
-            <!-- Offers Tab -->
-            <div id="offers-tab" class="tab-content">
-                <div class="analytics-section">
-                    <h2>🏠 العروض المكتشفة من الملفات</h2>
-                    <div style="margin-bottom: 16px;">
-                        <button class="btn success" onclick="exportOffers()">📤 تصدير العروض</button>
-                        <button class="btn" onclick="refreshOffersView()">🔄 تحديث</button>
-                        <button class="btn primary" onclick="analyzeOffersPatterns()">📊 تحليل الأنماط</button>
-                    </div>
-                    <div id="offers-container"></div>
-                </div>
-            </div>
-
-            <!-- Results Tab -->
-            <div id="results-tab" class="tab-content">
-                <div class="analytics-section">
-                    <h2>🎯 نتائج المطابقة الذكية</h2>
-                    <div style="margin-bottom: 16px;">
-                        <button class="btn success" onclick="exportResults()">📤 تصدير النتائج</button>
-                        <button class="btn" onclick="refreshResultsView()">🔄 تحديث</button>
-                        <button class="btn primary" onclick="generateMatchingReport()">📋 تقرير شامل</button>
-                        <button class="btn warning" onclick="clearAllResults()">🗑️ مسح النتائج</button>
-                    </div>
-                    
-                    <!-- Results Statistics -->
-                    <div class="stats-grid" style="margin-bottom: 20px;">
-                        <div class="stat-item">
-                            <div class="stat-number" id="results-total">0</div>
-                            <div class="stat-label">إجمالي المطابقات</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number" id="results-confirmed">0</div>
-                            <div class="stat-label">مطابقات مؤكدة</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number" id="results-potential">0</div>
-                            <div class="stat-label">مطابقات محتملة</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number" id="results-success-rate">0%</div>
-                            <div class="stat-label">معدل النجاح</div>
-                        </div>
-                    </div>
-                    
-                    <div id="results-container"></div>
-                </div>
-            </div>
-
-            <!-- Analysis Tab -->
-            <div id="analysis-tab" class="tab-content">
-                <div class="analytics-section">
-                    <h2>📊 تحليل البيانات المكتشفة</h2>
-                    <div id="analysis-results"></div>
-                </div>
-            </div>
-
-            <!-- Discovery Tab -->
-            <div id="discovery-tab" class="tab-content">
-                <div class="analytics-section">
-                    <h2>🔍 إعدادات اكتشاف الملفات</h2>
-                    <div id="discovery-settings"></div>
-                </div>
-            </div>
+            <div class="loader" id="loader"></div>
+            <div id="matchesContainer" class="matches-container"></div>
         </div>
     </div>
 
     <script>
-        // =================================================================================
-        // SUPER SMART FILE DISCOVERY AND AI ANALYSIS SYSTEM
-        // =================================================================================
-
-        // ===================== Core Variables =====================
-        const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
-        const OPENAI_MODEL = 'gpt-4o-mini';
-        const API_KEY_STORAGE_KEY = 'OPENAI_API_KEY';
-
-        let discoveredFiles = [];
-        let allTextFiles = [];
+        // Global Variables
+        let selectedFiles = [];
         let requests = [];
         let offers = [];
-        let allMatches = [];
-        let filteredMatches = [];
-        let searchProgress = 0;
+        let matches = [];
+        const API_KEY_STORAGE = 'OPENAI_API_KEY';
 
-        // ===================== Android File System Paths =====================
-        const ANDROID_SEARCH_PATHS = [
-            '/storage/emulated/0/',
-            '/sdcard/',
-            '/storage/',
-            '/data/data/',
-            '/data/media/',
-            '/mnt/sdcard/',
-            '/storage/sdcard0/',
-            '/storage/extSdCard/',
-            'Downloads/',
-            'Documents/',
-            'WhatsApp/Media/',
-            'Telegram/',
-            'Pictures/',
-            'DCIM/',
-            'Android/data/',
-            'Android/obb/'
-        ];
+        // File Selection
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            selectedFiles = files;
+            displaySelectedFiles();
+            showStatus('success', `تم اختيار ${files.length} ملف`);
+        });
 
-        const PRIORITY_FOLDERS = [
-            'Downloads',
-            'Documents', 
-            'WhatsApp',
-            'Telegram',
-            'Real Estate',
-            'Properties',
-            'عقارات',
-            'ملفات',
-            'مستندات'
-        ];
-
-        // ===================== File Access APIs (Simulated) =====================
-        class SmartFileDiscovery {
-            constructor() {
-                this.foundFiles = [];
-                this.scanProgress = 0;
-                this.isScanning = false;
-            }
-
-            async requestPermissions() {
-                // Simulate permission request
-                return new Promise((resolve) => {
-                    logToSearch('🔐 طلب صلاحيات الوصول للملفات...', 'info');
-                    setTimeout(() => {
-                        logToSearch('✅ تم منح الصلاحيات بنجاح', 'success');
-                        resolve(true);
-                    }, 1000);
-                });
-            }
-
-            async scanPath(path) {
-                const selectedPaths = Array.from(document.querySelectorAll('.path-checkbox:checked'))
-                    .map(cb => cb.closest('.search-path-item').dataset.path);
-
-                if (!selectedPaths.includes(path)) return [];
-
-                logToSearch(`🔍 فحص المسار: ${path}`, 'info');
-                
-                // Simulate file discovery with realistic Android paths
-                const simulatedFiles = await this.simulateFileDiscovery(path);
-                
-                return simulatedFiles;
-            }
-
-            async simulateFileDiscovery(basePath) {
-                const files = [];
-                const fileTypes = ['.txt', '.json'];
-                const commonNames = [
-                    'real_estate_data',
-                    'properties',
-                    'listings',
-                    'chat_export',
-                    'telegram_export',
-                    'whatsapp_chat',
-                    'عقارات',
-                    'بيانات_عقارية',
-                    'قوائم_العقارات',
-                    'محادثات',
-                    'backup',
-                    'export',
-                    'data'
-                ];
-
-                // Simulate realistic file discovery
-                for (let i = 0; i < Math.random() * 10 + 5; i++) {
-                    const name = commonNames[Math.floor(Math.random() * commonNames.length)];
-                    const ext = fileTypes[Math.floor(Math.random() * fileTypes.length)];
-                    const fileName = `${name}_${Date.now() + i}${ext}`;
-                    const fullPath = `${basePath}${fileName}`;
-                    
-                    // Simulate file content generation
-                    const content = await this.generateRealisticContent(ext);
-                    
-                    files.push({
-                        name: fileName,
-                        path: fullPath,
-                        size: content.length,
-                        type: ext === '.json' ? 'application/json' : 'text/plain',
-                        content: content,
-                        lastModified: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000)
-                    });
-
-                    // Add delay to simulate real scanning
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
-
-                return files;
-            }
-
-            async generateRealisticContent(fileType) {
-                if (fileType === '.json') {
-                    // Generate realistic JSON chat export
-                    const messages = [];
-                    const sampleTexts = [
-                        "مطلوب شقة في الرياض حي النخيل ميزانية 300 ألف",
-                        "للبيع فيلا في جدة حي الروضة 450 ألف ريال",
-                        "ابحث عن أرض في الدمام للاستثمار",
-                        "معروض شقق للإيجار في مكة أسعار مناسبة",
-                        "مطلوب محل تجاري في وسط البلد",
-                        "للبيع عمارة في الطائف عائد ممتاز",
-                        "أرض للبيع في القصيم موقع مميز",
-                        "شقة مفروشة للإيجار في الخبر",
-                        "فيلا دوبلكس للبيع في أبها",
-                        "مطلوب مكتب للإيجار في برج تجاري"
-                    ];
-
-                    for (let i = 0; i < Math.random() * 20 + 10; i++) {
-                        const text = sampleTexts[Math.floor(Math.random() * sampleTexts.length)];
-                        messages.push({
-                            id: i + 1,
-                            timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-                            original_text: text,
-                            phones: Math.random() > 0.7 ? [`05${Math.floor(Math.random() * 99999999).toString().padStart(8, '0')}`] : [],
-                            prices: Math.random() > 0.6 ? [`${Math.floor(Math.random() * 500 + 100)} ألف ريال`] : []
-                        });
-                    }
-
-                    return JSON.stringify({
-                        export_date: new Date().toISOString(),
-                        messages: messages,
-                        source: "chat_export"
-                    }, null, 2);
-                } else {
-                    // Generate realistic text content
-                    const textSamples = [
-                        "قائمة العقارات المتاحة:\n\n",
-                        "للبيع شقة في الرياض 280 ألف\n",
-                        "مطلوب فيلا في جدة ميزانية 500 ألف\n",
-                        "أرض تجارية للبيع في الدمام\n",
-                        "شقق للإيجار أسعار تنافسية\n",
-                        "عقارات استثمارية عوائد عالية\n"
-                    ];
-                    return textSamples.join('\n');
-                }
-            }
-
-            async deepScan() {
-                this.isScanning = true;
-                this.foundFiles = [];
-                this.scanProgress = 0;
-
-                logToSearch('🚀 بدء الفحص العميق للنظام...', 'info');
-                
-                const totalPaths = ANDROID_SEARCH_PATHS.length;
-                let scannedPaths = 0;
-
-                for (const path of ANDROID_SEARCH_PATHS) {
-                    try {
-                        const pathFiles = await this.scanPath(path);
-                        this.foundFiles.push(...pathFiles);
-                        
-                        scannedPaths++;
-                        this.scanProgress = (scannedPaths / totalPaths) * 100;
-                        
-                        updateSearchProgress(this.scanProgress);
-                        logToSearch(`📁 تم فحص ${path} - عثر على ${pathFiles.length} ملف`, 'success');
-                        
-                        // Update UI with discovered files
-                        displayDiscoveredFiles(pathFiles);
-                        
-                    } catch (error) {
-                        logToSearch(`❌ خطأ في فحص ${path}: ${error.message}`, 'error');
-                    }
-                }
-
-                this.isScanning = false;
-                logToSearch(`🎉 اكتمل الفحص! تم العثور على ${this.foundFiles.length} ملف`, 'success');
-                
-                return this.foundFiles;
-            }
-        }
-
-        // ===================== Smart AI Analysis =====================
-        class SmartAIAnalyzer {
-            constructor() {
-                this.analysisCache = new Map();
-            }
-
-            async analyzeFiles(files) {
-                logToSearch('🤖 بدء التحليل بالذكاء الاصطناعي...', 'info');
-                
-                const results = {
-                    totalFiles: files.length,
-                    textFiles: 0,
-                    jsonFiles: 0,
-                    totalRequests: 0,
-                    totalOffers: 0,
-                    extractedData: []
-                };
-
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    updateAIProgress((i / files.length) * 100);
-                    
-                    try {
-                        const analysis = await this.analyzeFile(file);
-                        results.extractedData.push({
-                            file: file.name,
-                            path: file.path,
-                            ...analysis
-                        });
-
-                        if (file.name.endsWith('.txt')) results.textFiles++;
-                        if (file.name.endsWith('.json')) results.jsonFiles++;
-                        
-                        results.totalRequests += analysis.requests?.length || 0;
-                        results.totalOffers += analysis.offers?.length || 0;
-
-                        logToSearch(`✅ تحليل ${file.name} - ${analysis.requests?.length || 0} طلب، ${analysis.offers?.length || 0} عرض`, 'success');
-                        
-                    } catch (error) {
-                        logToSearch(`❌ فشل تحليل ${file.name}: ${error.message}`, 'error');
-                    }
-                }
-
-                updateAIProgress(100);
-                logToSearch(`🎯 انتهى التحليل: ${results.totalRequests} طلب، ${results.totalOffers} عرض`, 'success');
-                
-                return results;
-            }
-
-            async analyzeFile(file) {
-                const cacheKey = `${file.path}_${file.lastModified}`;
-                if (this.analysisCache.has(cacheKey)) {
-                    return this.analysisCache.get(cacheKey);
-                }
-
-                const analysis = {
-                    requests: [],
-                    offers: [],
-                    phones: [],
-                    prices: [],
-                    metadata: {
-                        fileType: file.type,
-                        size: file.size,
-                        processed: new Date().toISOString()
-                    }
-                };
-
-                try {
-                    if (file.name.endsWith('.json')) {
-                        const jsonData = JSON.parse(file.content);
-                        if (jsonData.messages && Array.isArray(jsonData.messages)) {
-                            jsonData.messages.forEach(message => {
-                                const classified = this.classifyMessage(message.original_text || '');
-                                if (classified.type === 'request') {
-                                    analysis.requests.push({
-                                        text: message.original_text,
-                                        timestamp: message.timestamp,
-                                        phones: message.phones || [],
-                                        prices: message.prices || []
-                                    });
-                                } else if (classified.type === 'offer') {
-                                    analysis.offers.push({
-                                        text: message.original_text,
-                                        timestamp: message.timestamp,
-                                        phones: message.phones || [],
-                                        prices: message.prices || []
-                                    });
-                                }
-                                
-                                analysis.phones.push(...(message.phones || []));
-                                analysis.prices.push(...(message.prices || []));
-                            });
-                        }
-                    } else {
-                        // Text file analysis
-                        const lines = file.content.split('\n').filter(line => line.trim());
-                        lines.forEach(line => {
-                            const classified = this.classifyMessage(line);
-                            if (classified.type === 'request') {
-                                analysis.requests.push({ text: line });
-                            } else if (classified.type === 'offer') {
-                                analysis.offers.push({ text: line });
-                            }
-                        });
-                    }
-                } catch (error) {
-                    console.error('Error analyzing file:', error);
-                }
-
-                this.analysisCache.set(cacheKey, analysis);
-                return analysis;
-            }
-
-            classifyMessage(text) {
-                if (!text) return { type: 'unknown', confidence: 0 };
-
-                const textLower = text.toLowerCase();
-                
-                // Request keywords
-                const requestKeywords = [
-                    'مطلوب', 'ابحث عن', 'أريد', 'نريد', 'محتاج', 'بحاجة',
-                    'عاوز', 'عايز', 'ادور على', 'أدور على', 'نبحث عن',
-                    'wanted', 'looking for', 'need', 'require', 'searching'
-                ];
-
-                // Offer keywords  
-                const offerKeywords = [
-                    'للبيع', 'للايجار', 'للإيجار', 'معروض', 'متوفر', 'يوجد',
-                    'عندي', 'لدي', 'متاح', 'للتنازل', 'أعرض', 'نعرض',
-                    'for sale', 'for rent', 'available', 'offering'
-                ];
-
-                let requestScore = 0;
-                let offerScore = 0;
-
-                requestKeywords.forEach(keyword => {
-                    if (textLower.includes(keyword)) requestScore++;
-                });
-
-                offerKeywords.forEach(keyword => {
-                    if (textLower.includes(keyword)) offerScore++;
-                });
-
-                if (requestScore > offerScore) {
-                    return { type: 'request', confidence: requestScore / requestKeywords.length };
-                } else if (offerScore > requestScore) {
-                    return { type: 'offer', confidence: offerScore / offerKeywords.length };
-                }
-
-                return { type: 'unknown', confidence: 0 };
-            }
-        }
-
-        // ===================== Initialize Smart Systems =====================
-        const smartDiscovery = new SmartFileDiscovery();
-        const smartAnalyzer = new SmartAIAnalyzer();
-
-        // ===================== UI Functions =====================
-        function logToSearch(message, type = 'info') {
-            const log = document.getElementById('search-log');
-            const entry = document.createElement('div');
-            entry.className = `search-log-entry log-${type}`;
-            entry.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
-            log.appendChild(entry);
-            log.scrollTop = log.scrollHeight;
-        }
-
-        function updateSearchProgress(percentage) {
-            const indicator = document.getElementById('search-status-indicator');
-            indicator.textContent = `جاري المسح ${Math.round(percentage)}%`;
+        function displaySelectedFiles() {
+            const container = document.getElementById('selectedFiles');
+            container.innerHTML = '';
             
-            if (percentage >= 100) {
-                indicator.textContent = 'اكتمل المسح';
-            }
-        }
-
-        function updateAIProgress(percentage) {
-            const progressBar = document.getElementById('ai-progress');
-            const status = document.getElementById('ai-status');
-            
-            progressBar.style.width = percentage + '%';
-            status.textContent = `جاري التحليل... ${Math.round(percentage)}%`;
-            
-            if (percentage >= 100) {
-                status.textContent = 'اكتمل التحليل بالذكاء الاصطناعي';
-            }
-        }
-
-        function displayDiscoveredFiles(files) {
-            const container = document.getElementById('discovered-files');
-            const counter = document.getElementById('discovered-count');
-            
-            discoveredFiles.push(...files);
-            counter.textContent = discoveredFiles.length;
-
-            files.forEach(file => {
+            selectedFiles.forEach((file, index) => {
                 const fileDiv = document.createElement('div');
-                fileDiv.className = 'discovered-file-item';
+                fileDiv.className = 'file-item';
                 fileDiv.innerHTML = `
-                    <div class="file-info">
-                        <strong>${file.name}</strong>
-                        <div class="file-path">${file.path}</div>
-                        <div class="file-size">${formatFileSize(file.size)} - ${file.lastModified.toLocaleDateString('ar-SA')}</div>
-                    </div>
-                    <div>
-                        <button class="btn btn-small" onclick="processFile('${file.path}')">📋 معالجة</button>
-                        <button class="btn btn-small success" onclick="analyzeFile('${file.path}')">🤖 تحليل</button>
-                    </div>
+                    <div class="name">${file.name}</div>
+                    <div class="size">${formatFileSize(file.size)}</div>
+                    <button class="remove-file" onclick="removeFile(${index})">حذف</button>
                 `;
                 container.appendChild(fileDiv);
             });
         }
 
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            displaySelectedFiles();
+            showStatus('info', 'تم حذف الملف');
+        }
+
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 B';
             const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const sizes = ['B', 'KB', 'MB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-        // ===================== Core Functions =====================
-        async function startSmartSearch() {
-            showMessage('info', '🚀 بدء البحث الذكي المتقدم...');
-            
-            try {
-                // Reset progress
-                updateSearchProgress(0);
-                updateAIProgress(0);
-                
-                // Start discovery
-                const files = await smartDiscovery.deepScan();
-                
-                if (files.length > 0) {
-                    showMessage('success', `🎉 تم اكتشاف ${files.length} ملف بنجاح!`);
-                    
-                    // Auto-analyze discovered files
-                    const analysisResults = await smartAnalyzer.analyzeFiles(files);
-                    
-                    // Update global variables for matching
-                    allTextFiles = files;
-                    updateStatsFromAnalysis(analysisResults);
-                    
-                    showMessage('success', `🤖 تم تحليل البيانات: ${analysisResults.totalRequests} طلب، ${analysisResults.totalOffers} عرض`);
-                } else {
-                    showMessage('warning', '⚠️ لم يتم العثور على ملفات. جرب البحث العميق.');
-                }
-                
-            } catch (error) {
-                showMessage('error', `❌ خطأ في البحث الذكي: ${error.message}`);
-                logToSearch(`💥 خطأ نظام: ${error.message}`, 'error');
-            }
-        }
-
-        async function deepScanSystem() {
-            showMessage('info', '🔬 بدء الفحص العميق للنظام...');
-            
-            // Request enhanced permissions
-            document.getElementById('permission-modal').style.display = 'flex';
-        }
-
-        async function aiAutoDiscover() {
-            showMessage('info', '🤖 تفعيل الاكتشاف التلقائي بالذكاء الاصطناعي...');
-            
-            // Enhanced AI discovery with pattern recognition
-            logToSearch('🧠 تحليل أنماط الملفات...', 'info');
-            logToSearch('🔍 البحث في المجلدات المخفية...', 'warning');
-            logToSearch('📱 فحص بيانات التطبيقات...', 'info');
-            
-            // Simulate intelligent discovery
-            setTimeout(async () => {
-                await startSmartSearch();
-                logToSearch('🎯 اكتمل الاكتشاف الذكي!', 'success');
-            }, 2000);
-        }
-
-        function updateStatsFromAnalysis(analysis) {
-            document.getElementById('total-docs').textContent = analysis.totalFiles;
-            document.getElementById('request-count').textContent = analysis.totalRequests;
-            document.getElementById('offer-count').textContent = analysis.totalOffers;
-            
-            // Prepare data for matching
-            requests = [];
-            offers = [];
-            
-            analysis.extractedData.forEach(fileData => {
-                if (fileData.requests) {
-                    requests.push(...fileData.requests.map(req => ({
-                        text: req.text,
-                        source: fileData.file,
-                        phones: req.phones || [],
-                        prices: req.prices || []
-                    })));
-                }
-                if (fileData.offers) {
-                    offers.push(...fileData.offers.map(offer => ({
-                        text: offer.text,
-                        source: fileData.file,
-                        phones: offer.phones || [],
-                        prices: offer.prices || []
-                    })));
-                }
-            });
-        }
-
-        // ===================== Permission Handling =====================
-        async function requestPermissions() {
-            try {
-                await smartDiscovery.requestPermissions();
-                closePermissionModal();
-                showMessage('success', '✅ تم منح الصلاحيات. يمكن الآن الوصول لجميع الملفات');
-                
-                // Start enhanced deep scan
-                setTimeout(startSmartSearch, 1000);
-                
-            } catch (error) {
-                showMessage('error', '❌ فشل في الحصول على الصلاحيات');
-            }
-        }
-
-        function closePermissionModal() {
-            document.getElementById('permission-modal').style.display = 'none';
-        }
-
-        // ===================== Tab Management =====================
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-
-            document.getElementById(tabName + '-tab').classList.add('active');
-            event.target.classList.add('active');
-        }
-
-        // ===================== OpenAI Integration =====================
-        function getApiKey() {
-            return localStorage.getItem(API_KEY_STORAGE_KEY) || '';
-        }
-
-        function saveApiKey(key) {
-            if (!key || !key.trim()) return false;
-            localStorage.setItem(API_KEY_STORAGE_KEY, key.trim());
-            return true;
-        }
-
-        function promptAndSaveApiKey() {
-            const currentKey = getApiKey();
-            const newKey = prompt('أدخل مفتاح OpenAI (يُخزن محلياً في متصفحك):', currentKey);
-            if (newKey !== null) {
-                if (saveApiKey(newKey)) {
-                    showMessage('success', '✅ تم حفظ مفتاح OpenAI محلياً.');
-                } else {
-                    showMessage('error', '❌ لم يتم حفظ المفتاح. تأكد أنه غير فارغ.');
-                }
-            }
-        }
-
-        async function testApiKey() {
-            try {
-                const key = getApiKey();
-                if (!key) {
-                    showMessage('error', '❌ لا يوجد مفتاح OpenAI. اضغط "إعداد مفتاح OpenAI" لإدخاله.');
-                    return;
-                }
-
-                showMessage('info', '🧪 جاري اختبار المفتاح...');
-
-                const res = await fetch(OPENAI_API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${key}`
-                    },
-                    body: JSON.stringify({
-                        model: OPENAI_MODEL,
-                        messages: [{
-                            role: 'user',
-                            content: 'Test message'
-                        }],
-                        max_tokens: 10
-                    })
-                });
-
-                if (res.ok) {
-                    showMessage('success', '✅ المفتاح يعمل بشكل صحيح.');
-                } else {
-                    showMessage('error', '❌ المفتاح غير صالح.');
-                }
-            } catch (error) {
-                showMessage('error', `❌ خطأ في اختبار المفتاح: ${error.message}`);
-            }
-        }
-
-        // ===================== Smart Matching with Enhanced Error Handling =====================
-        async function runSmartMatching() {
-            const startBtn = document.getElementById('start-matching-btn');
-            const loader = document.getElementById('loader');
-            
-            if (requests.length === 0 || offers.length === 0) {
-                showMessage('warning', '⚠️ ابدأ البحث الذكي أولاً لاكتشاف البيانات');
+        // Process Files
+        async function processFiles() {
+            if (selectedFiles.length === 0) {
+                showStatus('error', 'الرجاء اختيار ملفات أولاً');
                 return;
             }
 
-            // تعطيل الزر وبدء التحميل
-            startBtn.disabled = true;
-            startBtn.textContent = '🧠 جاري المطابقة الذكية...';
-            loader.style.display = 'block';
+            showStatus('info', 'جاري تحليل الملفات...');
+            showLoader(true);
             
-            showMessage('info', '🧠 بدء المطابقة الذكية مع البيانات المكتشفة...');
-            logToSearch(`🔍 بدء تحليل ${requests.length} طلب و ${offers.length} عرض`, 'info');
-            
+            requests = [];
+            offers = [];
+
             try {
-                const key = getApiKey();
-                if (!key) {
-                    throw new Error('مطلوب مفتاح OpenAI للمطابقة الذكية');
+                for (const file of selectedFiles) {
+                    const content = await readFile(file);
+                    const analysis = analyzeContent(content, file.name);
+                    
+                    requests.push(...analysis.requests);
+                    offers.push(...analysis.offers);
                 }
 
-                performanceMonitor.startTimer('matching');
-                updateAIProgress(10);
+                updateStats();
+                showStatus('success', `تم تحليل ${selectedFiles.length} ملف - ${requests.length} طلب و ${offers.length} عرض`);
+                document.getElementById('resultsSection').style.display = 'block';
                 
-                // إنشاء prompt محسن
-                const prompt = createSmartMatchingPrompt(requests, offers);
-                logToSearch('📝 إرسال البيانات لـ OpenAI للتحليل...', 'info');
-                updateAIProgress(30);
-                
-                // استدعاء OpenAI
-                const matches = await callOpenAI(prompt, key);
-                updateAIProgress(80);
-                
-                performanceMonitor.endTimer('matching');
-                
-                if (matches && matches.length > 0) {
-                    // عرض النتائج
-                    displayMatches(matches);
-                    updateAIProgress(100);
-                    
-                    // تحديث الإحصائيات
-                    document.getElementById('matches-count').textContent = matches.length;
-                    
-                    // حفظ النتائج
-                    saveMatchingResults(matches);
-                    
-                    showMessage('success', `🎉 تم العثور على ${matches.length} مطابقة ذكية!`);
-                    logToSearch(`✅ نجحت المطابقة: ${matches.length} نتيجة`, 'success');
-                    
-                    // تحليل جودة النتائج
-                    analyzeMatchQuality(matches);
-                    
-                } else {
-                    updateAIProgress(100);
-                    showMessage('info', '📋 لم يتم العثور على مطابقات قوية في البيانات المكتشفة');
-                    logToSearch('ℹ️ لا توجد مطابقات قوية', 'warning');
-                    
-                    // عرض اقتراحات
-                    displaySuggestions();
-                }
-
             } catch (error) {
-                updateAIProgress(0);
-                console.error('Smart matching error:', error);
-                showMessage('error', `❌ خطأ في المطابقة الذكية: ${error.message}`);
-                logToSearch(`💥 فشل المطابقة: ${error.message}`, 'error');
-                
-                // عرض معلومات تشخيصية
-                displayDiagnosticInfo(error);
-                
+                showStatus('error', 'خطأ في تحليل الملفات: ' + error.message);
             } finally {
-                // إعادة تفعيل الزر
-                startBtn.disabled = false;
-                startBtn.textContent = '🧠 بدء المطابقة الذكية';
-                loader.style.display = 'none';
-                
-                // تحديث إحصائيات الأداء
-                updatePerformanceStats();
+                showLoader(false);
             }
         }
 
-        function analyzeMatchQuality(matches) {
-            const qualityStats = {
-                مؤكدة: matches.filter(m => m.quality === 'مؤكدة').length,
-                محتملة: matches.filter(m => m.quality === 'محتملة').length,
-                ممكنة: matches.filter(m => m.quality === 'ممكنة').length
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = reject;
+                reader.readAsText(file);
+            });
+        }
+
+        function analyzeContent(content, fileName) {
+            const result = {
+                requests: [],
+                offers: []
             };
-            
-            logToSearch(`📊 جودة المطابقات - مؤكدة: ${qualityStats.مؤكدة}, محتملة: ${qualityStats.محتملة}, ممكنة: ${qualityStats.ممكنة}`, 'info');
-            
-            // عرض تحليل سريع
-            const highQualityPercent = Math.round((qualityStats.مؤكدة / matches.length) * 100);
-            if (highQualityPercent >= 70) {
-                showMessage('success', `🌟 ممتاز! ${highQualityPercent}% من المطابقات مؤكدة`);
-            } else if (highQualityPercent >= 40) {
-                showMessage('info', `👍 جيد! ${highQualityPercent}% من المطابقات مؤكدة`);
-            } else {
-                showMessage('warning', `⚠️ جودة منخفضة: ${highQualityPercent}% فقط مؤكدة`);
+
+            try {
+                // Try parsing as JSON first
+                const jsonData = JSON.parse(content);
+                
+                if (jsonData.messages && Array.isArray(jsonData.messages)) {
+                    jsonData.messages.forEach(msg => {
+                        const text = msg.original_text || msg.text || '';
+                        const classified = classifyText(text);
+                        
+                        const item = {
+                            text: text,
+                            source: fileName,
+                            phones: msg.phones || extractPhones(text),
+                            prices: msg.prices || extractPrices(text)
+                        };
+
+                        if (classified === 'request') {
+                            result.requests.push(item);
+                        } else if (classified === 'offer') {
+                            result.offers.push(item);
+                        }
+                    });
+                }
+            } catch (e) {
+                // Process as plain text
+                const lines = content.split('\n').filter(line => line.trim());
+                lines.forEach(line => {
+                    const classified = classifyText(line);
+                    
+                    const item = {
+                        text: line,
+                        source: fileName,
+                        phones: extractPhones(line),
+                        prices: extractPrices(line)
+                    };
+
+                    if (classified === 'request') {
+                        result.requests.push(item);
+                    } else if (classified === 'offer') {
+                        result.offers.push(item);
+                    }
+                });
             }
+
+            return result;
         }
 
-        function saveMatchingResults(matches) {
+        function classifyText(text) {
+            const textLower = text.toLowerCase();
+            
+            const requestKeywords = ['مطلوب', 'ابحث عن', 'أريد', 'نريد', 'محتاج', 'بحاجة', 'عاوز', 'عايز'];
+            const offerKeywords = ['للبيع', 'للايجار', 'للإيجار', 'معروض', 'متوفر', 'يوجد', 'عندي', 'لدي', 'متاح'];
+
+            let requestScore = 0;
+            let offerScore = 0;
+
+            requestKeywords.forEach(keyword => {
+                if (textLower.includes(keyword)) requestScore++;
+            });
+
+            offerKeywords.forEach(keyword => {
+                if (textLower.includes(keyword)) offerScore++;
+            });
+
+            if (requestScore > offerScore) return 'request';
+            if (offerScore > requestScore) return 'offer';
+            return 'unknown';
+        }
+
+        function extractPhones(text) {
+            const phoneRegex = /05\d{8}/g;
+            return text.match(phoneRegex) || [];
+        }
+
+        function extractPrices(text) {
+            const priceRegex = /\d+[\s]*(ألف|الف|ريال|ريـال)/g;
+            return text.match(priceRegex) || [];
+        }
+
+        // Smart Matching
+        async function startMatching() {
+            if (requests.length === 0 || offers.length === 0) {
+                showStatus('error', 'الرجاء تحليل الملفات أولاً');
+                return;
+            }
+
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                showStatus('error', 'الرجاء إدخال مفتاح OpenAI');
+                return;
+            }
+
+            showStatus('info', 'جاري المطابقة الذكية...');
+            showLoader(true);
+
             try {
-                const resultsData = {
-                    timestamp: new Date().toISOString(),
-                    totalMatches: matches.length,
-                    sourceRequests: requests.length,
-                    sourceOffers: offers.length,
-                    matches: matches,
-                    performance: performanceMonitor.getReport()
-                };
+                const prompt = createMatchingPrompt();
+                const response = await callOpenAI(prompt, apiKey);
                 
-                localStorage.setItem('smart_matching_results', JSON.stringify(resultsData));
-                logToSearch('💾 تم حفظ نتائج المطابقة', 'success');
+                matches = parseOpenAIResponse(response);
+                displayMatches();
+                updateStats();
+                
+                showStatus('success', `تم العثور على ${matches.length} مطابقة`);
                 
             } catch (error) {
-                logToSearch(`❌ فشل حفظ النتائج: ${error.message}`, 'error');
+                showStatus('error', 'خطأ في المطابقة: ' + error.message);
+            } finally {
+                showLoader(false);
             }
         }
 
-        function displaySuggestions() {
-            const container = document.getElementById('matches-container');
-            container.innerHTML = `
-                <div style="text-align: center; padding: 40px; background: rgba(245, 158, 11, 0.1); border: 2px solid rgba(245, 158, 11, 0.3); border-radius: 16px;">
-                    <h3>💡 اقتراحات لتحسين النتائج</h3>
-                    <div style="text-align: right; margin-top: 20px;">
-                        <p>🔍 <strong>ابحث في مجلدات إضافية:</strong> جرب البحث العميق للعثور على ملفات أكثر</p>
-                        <p>📱 <strong>تحقق من تطبيقات المراسلة:</strong> WhatsApp, Telegram قد تحتوي على بيانات عقارية</p>
-                        <p>📄 <strong>أضف ملفات يدوياً:</strong> ارفع ملفات إضافية تحتوي على عروض وطلبات</p>
-                        <p>🤖 <strong>حسن الـ prompt:</strong> تأكد من وضوح البيانات المدخلة</p>
-                    </div>
-                    <div style="margin-top: 20px;">
-                        <button class="btn primary" onclick="deepScanSystem()">🔬 فحص عميق</button>
-                        <button class="btn success" onclick="aiAutoDiscover()">🤖 اكتشاف تلقائي</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        function displayDiagnosticInfo(error) {
-            logToSearch('🔧 معلومات تشخيصية:', 'info');
-            logToSearch(`- نوع الخطأ: ${error.name}`, 'info');
-            logToSearch(`- رسالة الخطأ: ${error.message}`, 'error');
-            logToSearch(`- عدد الطلبات: ${requests.length}`, 'info');
-            logToSearch(`- عدد العروض: ${offers.length}`, 'info');
-            logToSearch(`- حالة مفتاح API: ${getApiKey() ? 'موجود' : 'مفقود'}`, getApiKey() ? 'success' : 'error');
-            
-            if (error.message.includes('API')) {
-                logToSearch('💡 جرب اختبار مفتاح OpenAI أولاً', 'warning');
-            }
-        }
-
-        function createSmartMatchingPrompt(requestsBatch, offersBatch) {
-            return `أنت محلل عقاري ذكي. مهمتك تحليل البيانات المكتشفة ومطابقة العروض مع الطلبات.
-
-البيانات المكتشفة:
+        function createMatchingPrompt() {
+            return `أنت محلل عقاري ذكي. قم بمطابقة العروض مع الطلبات التالية:
 
 الطلبات:
-${requestsBatch.map((req, i) => `${i + 1}. ${req.text}`).join('\n')}
+${requests.slice(0, 10).map((r, i) => `${i+1}. ${r.text}`).join('\n')}
 
 العروض:
-${offersBatch.map((offer, i) => `${i + 1}. ${offer.text}`).join('\n')}
+${offers.slice(0, 10).map((o, i) => `${i+1}. ${o.text}`).join('\n')}
 
-تعليمات مهمة:
-- أرجع مصفوفة JSON فقط
-- لا تضع أي نص قبل أو بعد JSON
-- ابدأ مباشرة بـ [
-- كل مطابقة يجب أن تحتوي على الحقول التالية فقط:
-
-[
-{
+أرجع مصفوفة JSON فقط بدون أي نص إضافي. كل مطابقة يجب أن تحتوي على:
+[{
   "quality": "مؤكدة",
-  "property_type": "شقة",
-  "area": "الرياض",
-  "requested_price": "300 ألف",
-  "offered_price": "280 ألف",
+  "property_type": "نوع العقار",
+  "area": "المنطقة",
+  "requested_price": "السعر المطلوب",
+  "offered_price": "السعر المعروض",
   "reason": "سبب المطابقة",
-  "request_text": "نص الطلب الكامل",
-  "offer_text": "نص العرض الكامل",
-  "urgency_score": 8,
-  "source_files": "اسم الملف المصدر"
-}
-]`;
+  "request_text": "نص الطلب",
+  "offer_text": "نص العرض"
+}]`;
         }
 
         async function callOpenAI(prompt, apiKey) {
-            const response = await fetch(OPENAI_API_URL, {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${apiKey}`
                 },
                 body: JSON.stringify({
-                    model: OPENAI_MODEL,
-                    messages: [{
-                        role: 'system',
-                        content: 'أرجع JSON فقط بدون أي نص إضافي أو شرح. ابدأ مباشرة بـ [ وانته بـ ]'
-                    }, {
-                        role: 'user',
-                        content: prompt
-                    }],
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: 'أرجع JSON فقط بدون أي نص إضافي'
+                        },
+                        {
+                            role: 'user',
+                            content: prompt
+                        }
+                    ],
                     temperature: 0.3,
-                    max_tokens: 4000
+                    max_tokens: 2000
                 })
             });
 
@@ -1612,1211 +727,151 @@ ${offersBatch.map((offer, i) => `${i + 1}. ${offer.text}`).join('\n')}
             }
 
             const data = await response.json();
-            let content = data.choices[0].message.content;
-            
+            return data.choices[0].message.content;
+        }
+
+        function parseOpenAIResponse(content) {
             try {
-                // إزالة أي نص قبل أو بعد JSON
+                // Clean the response
                 content = content.replace(/```json|```/g, '').trim();
                 
-                // البحث عن بداية JSON
+                // Find JSON array
                 const jsonStart = content.indexOf('[');
                 const jsonEnd = content.lastIndexOf(']');
                 
-                if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+                if (jsonStart !== -1 && jsonEnd !== -1) {
                     content = content.substring(jsonStart, jsonEnd + 1);
                 }
                 
-                // محاولة تحليل JSON
-                const parsed = JSON.parse(content);
-                
-                // التأكد من أن النتيجة مصفوفة
-                if (Array.isArray(parsed)) {
-                    logToSearch(`✅ تم تحليل ${parsed.length} مطابقة من OpenAI`, 'success');
-                    return parsed;
-                } else {
-                    logToSearch('⚠️ OpenAI لم يرجع مصفوفة صالحة', 'warning');
-                    return [];
-                }
-                
-            } catch (e) {
-                console.error('Failed to parse OpenAI response:', content);
-                logToSearch(`❌ فشل تحليل استجابة OpenAI: ${e.message}`, 'error');
-                
-                // محاولة أخيرة - استخراج JSON من النص
-                try {
-                    const regex = /\[[\s\S]*\]/;
-                    const match = content.match(regex);
-                    if (match) {
-                        const extracted = JSON.parse(match[0]);
-                        if (Array.isArray(extracted)) {
-                            logToSearch(`✅ تم استخراج ${extracted.length} مطابقة بنجاح`, 'success');
-                            return extracted;
-                        }
-                    }
-                } catch (e2) {
-                    console.error('Final parsing attempt failed:', e2);
-                }
-                
+                return JSON.parse(content);
+            } catch (error) {
+                console.error('Failed to parse response:', error);
                 return [];
             }
         }
 
-        function displayMatches(matches) {
-            const container = document.getElementById('matches-container');
-            const noResults = document.getElementById('no-results');
-            
+        function displayMatches() {
+            const container = document.getElementById('matchesContainer');
             container.innerHTML = '';
-            noResults.style.display = 'none';
 
-            if (!matches || matches.length === 0) {
-                noResults.style.display = 'block';
+            if (matches.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #94a3b8;">لا توجد مطابقات</div>';
                 return;
             }
 
-            allMatches = matches;
-            filteredMatches = matches;
-
             matches.forEach((match, index) => {
                 const card = document.createElement('div');
-                card.className = 'match-card';
+                card.className = `match-card ${match.quality === 'مؤكدة' ? 'confirmed' : 'potential'}`;
                 card.innerHTML = `
                     <div class="match-header">
-                        <h3>🏠 مطابقة ${match.property_type || 'عقارية'}</h3>
+                        <h4>مطابقة ${index + 1}: ${match.property_type || 'عقار'}</h4>
                         <span class="match-quality ${match.quality}">${match.quality}</span>
                     </div>
-                    <div><strong>المنطقة:</strong> ${match.area || 'غير محدد'}</div>
-                    <div><strong>سعر الطلب:</strong> ${match.requested_price || 'غير محدد'}</div>
-                    <div><strong>سعر العرض:</strong> ${match.offered_price || 'غير محدد'}</div>
-                    <div><strong>ملفات المصدر:</strong> ${match.source_files || 'بيانات مكتشفة'}</div>
-                    <div><strong>💡 سبب المطابقة:</strong> ${match.reason}</div>
-                    <div style="margin-top: 12px;">
-                        <h4>📝 نص الطلب:</h4>
-                        <p style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px;">${match.request_text}</p>
-                    </div>
-                    <div style="margin-top: 12px;">
-                        <h4>🏠 نص العرض:</h4>
-                        <p style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px;">${match.offer_text}</p>
+                    <div class="match-details">
+                        <div><strong>المنطقة:</strong> ${match.area || 'غير محدد'}</div>
+                        <div><strong>السعر المطلوب:</strong> ${match.requested_price || 'غير محدد'}</div>
+                        <div><strong>السعر المعروض:</strong> ${match.offered_price || 'غير محدد'}</div>
+                        <div><strong>السبب:</strong> ${match.reason}</div>
+                        <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                            <div><strong>الطلب:</strong> ${match.request_text}</div>
+                            <div style="margin-top: 5px;"><strong>العرض:</strong> ${match.offer_text}</div>
+                        </div>
                     </div>
                 `;
                 container.appendChild(card);
             });
         }
 
-        // ===================== Utility Functions =====================
-        function showMessage(type, message) {
-            const statusDiv = document.getElementById('status-message');
-            statusDiv.className = type;
-            statusDiv.textContent = message;
-            statusDiv.style.display = 'block';
+        // API Key Management
+        function getApiKey() {
+            return localStorage.getItem(API_KEY_STORAGE) || '';
+        }
 
+        function saveApiKey() {
+            const key = document.getElementById('apiKey').value.trim();
+            if (!key) {
+                showStatus('error', 'الرجاء إدخال المفتاح');
+                return;
+            }
+            localStorage.setItem(API_KEY_STORAGE, key);
+            showStatus('success', 'تم حفظ المفتاح');
+        }
+
+        async function testApiKey() {
+            const key = getApiKey();
+            if (!key) {
+                showStatus('error', 'الرجاء حفظ المفتاح أولاً');
+                return;
+            }
+
+            showStatus('info', 'جاري اختبار المفتاح...');
+            
+            try {
+                await callOpenAI('Test', key);
+                showStatus('success', 'المفتاح يعمل بشكل صحيح');
+            } catch (error) {
+                showStatus('error', 'المفتاح غير صالح');
+            }
+        }
+
+        // Export Results
+        function exportResults() {
+            if (matches.length === 0) {
+                showStatus('error', 'لا توجد نتائج للتصدير');
+                return;
+            }
+
+            const exportData = {
+                exportDate: new Date().toISOString(),
+                totalRequests: requests.length,
+                totalOffers: offers.length,
+                totalMatches: matches.length,
+                matches: matches
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `نتائج_المطابقة_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showStatus('success', 'تم تصدير النتائج');
+        }
+
+        // UI Helpers
+        function showStatus(type, message) {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.textContent = message;
+            status.style.display = 'block';
+            
             if (type !== 'error') {
                 setTimeout(() => {
-                    statusDiv.style.display = 'none';
-                }, 5000);
+                    status.style.display = 'none';
+                }, 3000);
             }
         }
 
-        function applyFilters() {
-            // Implement filtering logic for discovered matches
-            showMessage('info', 'تطبيق التصفية على النتائج المكتشفة...');
+        function showLoader(show) {
+            document.getElementById('loader').style.display = show ? 'block' : 'none';
         }
 
-        // ===================== Initialize System =====================
+        function updateStats() {
+            document.getElementById('totalFiles').textContent = selectedFiles.length;
+            document.getElementById('totalRequests').textContent = requests.length;
+            document.getElementById('totalOffers').textContent = offers.length;
+            document.getElementById('totalMatches').textContent = matches.length;
+        }
+
+        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            logToSearch('🚀 نظام البحث الذكي جاهز للعمل', 'success');
-            logToSearch('📱 جاهز للبحث في ملفات الأندرويد', 'info');
-            logToSearch('🤖 AI محلل البيانات مُفعل', 'success');
-            showMessage('success', '🧠 النظام الذكي جاهز! ابدأ البحث لاكتشاف الملفات');
-        });
-        
-        // ===================== Advanced File Processing =====================
-        async function processFile(filePath) {
-            showMessage('info', `📋 معالجة الملف: ${filePath}`);
-            
-            const file = discoveredFiles.find(f => f.path === filePath);
-            if (!file) {
-                showMessage('error', '❌ الملف غير موجود');
-                return;
+            const savedKey = getApiKey();
+            if (savedKey) {
+                document.getElementById('apiKey').value = savedKey;
             }
-
-            try {
-                const analysis = await smartAnalyzer.analyzeFile(file);
-                
-                // Save to system database
-                const processedFile = {
-                    id: Date.now().toString(),
-                    name: file.name,
-                    path: file.path,
-                    content: file.content,
-                    type: file.type,
-                    size: file.size,
-                    uploadTime: new Date().toLocaleString('ar-SA'),
-                    timestamp: Date.now(),
-                    analysisData: analysis
-                };
-
-                // Add to allTextFiles for matching
-                allTextFiles.push(processedFile);
-                
-                // Extract requests and offers
-                if (analysis.requests) {
-                    requests.push(...analysis.requests.map(req => ({
-                        text: req.text,
-                        source: file.name,
-                        phones: req.phones || [],
-                        prices: req.prices || []
-                    })));
-                }
-
-                if (analysis.offers) {
-                    offers.push(...analysis.offers.map(offer => ({
-                        text: offer.text,
-                        source: file.name,
-                        phones: offer.phones || [],
-                        prices: offer.prices || []
-                    })));
-                }
-
-                // Update stats
-                document.getElementById('total-docs').textContent = allTextFiles.length;
-                document.getElementById('request-count').textContent = requests.length;
-                document.getElementById('offer-count').textContent = offers.length;
-
-                showMessage('success', `✅ تم معالجة ${file.name} - ${analysis.requests?.length || 0} طلب، ${analysis.offers?.length || 0} عرض`);
-                
-            } catch (error) {
-                showMessage('error', `❌ فشل معالجة الملف: ${error.message}`);
-                logToSearch(`💥 خطأ في معالجة ${file.name}: ${error.message}`, 'error');
-            }
-        }
-
-        async function analyzeFile(filePath) {
-            showMessage('info', `🤖 تحليل الملف: ${filePath}`);
-            
-            const file = discoveredFiles.find(f => f.path === filePath);
-            if (!file) {
-                showMessage('error', '❌ الملف غير موجود');
-                return;
-            }
-
-            try {
-                updateAIProgress(0);
-                const analysis = await smartAnalyzer.analyzeFile(file);
-                updateAIProgress(100);
-                
-                // Display analysis results
-                displayAnalysisResults(file, analysis);
-                showMessage('success', `🎯 تم تحليل ${file.name} بنجاح`);
-                
-            } catch (error) {
-                showMessage('error', `❌ فشل تحليل الملف: ${error.message}`);
-            }
-        }
-
-        function displayAnalysisResults(file, analysis) {
-            const resultsContainer = document.getElementById('analysis-results');
-            if (!resultsContainer) return;
-
-            const resultCard = document.createElement('div');
-            resultCard.className = 'analytics-card';
-            resultCard.innerHTML = `
-                <h4>📊 تحليل: ${file.name}</h4>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px;">
-                    <div class="stat-item">
-                        <div class="stat-number">${analysis.requests?.length || 0}</div>
-                        <div class="stat-label">الطلبات</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">${analysis.offers?.length || 0}</div>
-                        <div class="stat-label">العروض</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">${analysis.phones?.length || 0}</div>
-                        <div class="stat-label">أرقام هواتف</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">${analysis.prices?.length || 0}</div>
-                        <div class="stat-label">أسعار</div>
-                    </div>
-                </div>
-                
-                ${analysis.requests?.length > 0 ? `
-                    <h5>📝 الطلبات المكتشفة:</h5>
-                    <div style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
-                        ${analysis.requests.map((req, i) => `
-                            <div style="margin-bottom: 8px; padding: 8px; background: rgba(59, 130, 246, 0.1); border-radius: 4px;">
-                                <strong>طلب ${i + 1}:</strong> ${req.text.substring(0, 100)}${req.text.length > 100 ? '...' : ''}
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : ''}
-                
-                ${analysis.offers?.length > 0 ? `
-                    <h5>🏠 العروض المكتشفة:</h5>
-                    <div style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
-                        ${analysis.offers.map((offer, i) => `
-                            <div style="margin-bottom: 8px; padding: 8px; background: rgba(34, 197, 94, 0.1); border-radius: 4px;">
-                                <strong>عرض ${i + 1}:</strong> ${offer.text.substring(0, 100)}${offer.text.length > 100 ? '...' : ''}
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : ''}
-                
-                <div style="margin-top: 16px;">
-                    <button class="btn primary" onclick="processFile('${file.path}')">✅ إضافة للنظام</button>
-                    <button class="btn success" onclick="exportAnalysis('${file.name}')">📤 تصدير التحليل</button>
-                </div>
-            `;
-            
-            resultsContainer.appendChild(resultCard);
-        }
-
-        // ===================== Display Functions for Requests, Offers & Results =====================
-        
-        function updateTabCounters() {
-            document.getElementById('requests-tab-count').textContent = requests.length;
-            document.getElementById('offers-tab-count').textContent = offers.length;
-            document.getElementById('results-tab-count').textContent = allMatches.length;
-        }
-
-        function displayRequests() {
-            const container = document.getElementById('requests-container');
-            if (!container) return;
-
-            if (requests.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: var(--muted);">
-                        <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
-                        <h3>لا توجد طلبات مكتشفة</h3>
-                        <p>ابدأ البحث الذكي لاكتشاف الطلبات من الملفات</p>
-                        <button class="btn primary" onclick="startSmartSearch()">🔍 بدء البحث</button>
-                    </div>
-                `;
-                return;
-            }
-
-            const requestsHTML = requests.map((request, index) => `
-                <div class="discovered-file-item" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);">
-                    <div class="file-info" style="flex: 1;">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                            <span style="background: var(--accent-2); color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">
-                                طلب ${index + 1}
-                            </span>
-                            <span style="color: var(--muted); font-size: 12px;">
-                                المصدر: ${request.source || 'غير محدد'}
-                            </span>
-                        </div>
-                        <div style="font-weight: 500; margin-bottom: 8px; line-height: 1.4;">
-                            ${request.text}
-                        </div>
-                        ${request.phones && request.phones.length > 0 ? `
-                            <div style="font-size: 12px; color: var(--accent); margin-bottom: 4px;">
-                                📞 ${request.phones.join(', ')}
-                            </div>
-                        ` : ''}
-                        ${request.prices && request.prices.length > 0 ? `
-                            <div style="font-size: 12px; color: var(--accent-3); margin-bottom: 4px;">
-                                💰 ${request.prices.join(', ')}
-                            </div>
-                        ` : ''}
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <button class="btn btn-small" onclick="findMatchesForRequest(${index})" title="البحث عن مطابقات">🔍</button>
-                        <button class="btn btn-small success" onclick="copyRequestText(${index})" title="نسخ النص">📋</button>
-                        <button class="btn btn-small warning" onclick="editRequest(${index})" title="تعديل">✏️</button>
-                    </div>
-                </div>
-            `).join('');
-
-            container.innerHTML = requestsHTML;
-        }
-
-        function displayOffers() {
-            const container = document.getElementById('offers-container');
-            if (!container) return;
-
-            if (offers.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: var(--muted);">
-                        <div style="font-size: 48px; margin-bottom: 16px;">🏠</div>
-                        <h3>لا توجد عروض مكتشفة</h3>
-                        <p>ابدأ البحث الذكي لاكتشاف العروض من الملفات</p>
-                        <button class="btn primary" onclick="startSmartSearch()">🔍 بدء البحث</button>
-                    </div>
-                `;
-                return;
-            }
-
-            const offersHTML = offers.map((offer, index) => `
-                <div class="discovered-file-item" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3);">
-                    <div class="file-info" style="flex: 1;">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                            <span style="background: var(--accent); color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">
-                                عرض ${index + 1}
-                            </span>
-                            <span style="color: var(--muted); font-size: 12px;">
-                                المصدر: ${offer.source || 'غير محدد'}
-                            </span>
-                        </div>
-                        <div style="font-weight: 500; margin-bottom: 8px; line-height: 1.4;">
-                            ${offer.text}
-                        </div>
-                        ${offer.phones && offer.phones.length > 0 ? `
-                            <div style="font-size: 12px; color: var(--accent); margin-bottom: 4px;">
-                                📞 ${offer.phones.join(', ')}
-                            </div>
-                        ` : ''}
-                        ${offer.prices && offer.prices.length > 0 ? `
-                            <div style="font-size: 12px; color: var(--accent-3); margin-bottom: 4px;">
-                                💰 ${offer.prices.join(', ')}
-                            </div>
-                        ` : ''}
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <button class="btn btn-small" onclick="findMatchesForOffer(${index})" title="البحث عن مطابقات">🔍</button>
-                        <button class="btn btn-small success" onclick="copyOfferText(${index})" title="نسخ النص">📋</button>
-                        <button class="btn btn-small warning" onclick="editOffer(${index})" title="تعديل">✏️</button>
-                    </div>
-                </div>
-            `).join('');
-
-            container.innerHTML = offersHTML;
-        }
-
-        function displayResults() {
-            const container = document.getElementById('results-container');
-            if (!container) return;
-
-            if (!allMatches || allMatches.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: var(--muted);">
-                        <div style="font-size: 48px; margin-bottom: 16px;">🎯</div>
-                        <h3>لا توجد نتائج مطابقة</h3>
-                        <p>قم بالمطابقة الذكية للحصول على النتائج</p>
-                        <button class="btn primary" onclick="runSmartMatching()">🧠 بدء المطابقة</button>
-                    </div>
-                `;
-                return;
-            }
-
-            // تحديث إحصائيات النتائج
-            updateResultsStats();
-
-            const resultsHTML = allMatches.map((match, index) => `
-                <div class="match-card" style="margin-bottom: 16px;">
-                    <div class="match-header">
-                        <h3>🏠 مطابقة ${index + 1}: ${match.property_type || 'عقارية'}</h3>
-                        <span class="match-quality ${match.quality}">${match.quality}</span>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px;">
-                        <div><strong>المنطقة:</strong> ${match.area || 'غير محدد'}</div>
-                        <div><strong>سعر الطلب:</strong> ${match.requested_price || 'غير محدد'}</div>
-                        <div><strong>سعر العرض:</strong> ${match.offered_price || 'غير محدد'}</div>
-                        <div><strong>درجة الإلحاح:</strong> ${match.urgency_score || 'غير محدد'}/10</div>
-                        <div><strong>ملفات المصدر:</strong> ${match.source_files || 'بيانات مكتشفة'}</div>
-                    </div>
-                    
-                    <div style="background: rgba(139, 92, 246, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
-                        <strong>💡 سبب المطابقة:</strong> ${match.reason}
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-                        <div>
-                            <h4 style="margin: 0 0 8px; color: var(--accent-2);">📝 نص الطلب:</h4>
-                            <div style="background: rgba(59, 130, 246, 0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
-                                ${match.request_text}
-                            </div>
-                        </div>
-                        <div>
-                            <h4 style="margin: 0 0 8px; color: var(--accent);">🏠 نص العرض:</h4>
-                            <div style="background: rgba(34, 197, 94, 0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(34, 197, 94, 0.3);">
-                                ${match.offer_text}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button class="btn success" onclick="exportMatch(${index})" title="تصدير هذه المطابقة">📤 تصدير</button>
-                        <button class="btn primary" onclick="shareMatch(${index})" title="مشاركة">📱 مشاركة</button>
-                        <button class="btn warning" onclick="editMatch(${index})" title="تعديل">✏️ تعديل</button>
-                        <button class="btn" onclick="duplicateMatch(${index})" title="تكرار">📋 تكرار</button>
-                        <button class="btn" style="background: var(--danger);" onclick="deleteMatch(${index})" title="حذف">🗑️ حذف</button>
-                    </div>
-                </div>
-            `).join('');
-
-            container.innerHTML = resultsHTML;
-        }
-
-        function updateResultsStats() {
-            if (!allMatches || allMatches.length === 0) {
-                document.getElementById('results-total').textContent = '0';
-                document.getElementById('results-confirmed').textContent = '0';
-                document.getElementById('results-potential').textContent = '0';
-                document.getElementById('results-success-rate').textContent = '0%';
-                return;
-            }
-
-            const total = allMatches.length;
-            const confirmed = allMatches.filter(m => m.quality === 'مؤكدة').length;
-            const potential = allMatches.filter(m => m.quality === 'محتملة').length;
-            const successRate = total > 0 ? Math.round((confirmed / total) * 100) : 0;
-
-            document.getElementById('results-total').textContent = total;
-            document.getElementById('results-confirmed').textContent = confirmed;
-            document.getElementById('results-potential').textContent = potential;
-            document.getElementById('results-success-rate').textContent = successRate + '%';
-        }
-
-        // ===================== Export Functions =====================
-        
-        function exportRequests() {
-            if (requests.length === 0) {
-                showMessage('warning', '⚠️ لا توجد طلبات للتصدير');
-                return;
-            }
-
-            const exportData = {
-                exportDate: new Date().toISOString(),
-                type: 'طلبات عقارية',
-                count: requests.length,
-                data: requests
-            };
-
-            downloadJSON(exportData, `الطلبات_المكتشفة_${Date.now()}.json`);
-            showMessage('success', `📤 تم تصدير ${requests.length} طلب`);
-        }
-
-        function exportOffers() {
-            if (offers.length === 0) {
-                showMessage('warning', '⚠️ لا توجد عروض للتصدير');
-                return;
-            }
-
-            const exportData = {
-                exportDate: new Date().toISOString(),
-                type: 'عروض عقارية',
-                count: offers.length,
-                data: offers
-            };
-
-            downloadJSON(exportData, `العروض_المكتشفة_${Date.now()}.json`);
-            showMessage('success', `📤 تم تصدير ${offers.length} عرض`);
-        }
-
-        function exportResults() {
-            if (!allMatches || allMatches.length === 0) {
-                showMessage('warning', '⚠️ لا توجد نتائج للتصدير');
-                return;
-            }
-
-            const exportData = {
-                exportDate: new Date().toISOString(),
-                type: 'نتائج المطابقة',
-                stats: {
-                    total: allMatches.length,
-                    confirmed: allMatches.filter(m => m.quality === 'مؤكدة').length,
-                    potential: allMatches.filter(m => m.quality === 'محتملة').length,
-                    possible: allMatches.filter(m => m.quality === 'ممكنة').length
-                },
-                data: allMatches
-            };
-
-            downloadJSON(exportData, `نتائج_المطابقة_${Date.now()}.json`);
-            showMessage('success', `📤 تم تصدير ${allMatches.length} نتيجة`);
-        }
-
-        // ===================== Interactive Functions =====================
-        
-        function findMatchesForRequest(requestIndex) {
-            const request = requests[requestIndex];
-            if (!request) return;
-
-            showMessage('info', `🔍 البحث عن مطابقات للطلب: ${request.text.substring(0, 50)}...`);
-            
-            // تصفية المطابقات التي تحتوي على هذا الطلب
-            const relatedMatches = allMatches.filter(match => 
-                match.request_text && match.request_text.includes(request.text.substring(0, 30))
-            );
-
-            if (relatedMatches.length > 0) {
-                switchTab('results');
-                highlightMatches(relatedMatches);
-                showMessage('success', `✅ تم العثور على ${relatedMatches.length} مطابقة لهذا الطلب`);
-            } else {
-                showMessage('warning', '⚠️ لم يتم العثور على مطابقات لهذا الطلب');
-            }
-        }
-
-        function findMatchesForOffer(offerIndex) {
-            const offer = offers[offerIndex];
-            if (!offer) return;
-
-            showMessage('info', `🔍 البحث عن مطابقات للعرض: ${offer.text.substring(0, 50)}...`);
-            
-            const relatedMatches = allMatches.filter(match => 
-                match.offer_text && match.offer_text.includes(offer.text.substring(0, 30))
-            );
-
-            if (relatedMatches.length > 0) {
-                switchTab('results');
-                highlightMatches(relatedMatches);
-                showMessage('success', `✅ تم العثور على ${relatedMatches.length} مطابقة لهذا العرض`);
-            } else {
-                showMessage('warning', '⚠️ لم يتم العثور على مطابقات لهذا العرض');
-            }
-        }
-
-        function highlightMatches(matches) {
-            // تمييز المطابقات المحددة في واجهة النتائج
-            setTimeout(() => {
-                const matchCards = document.querySelectorAll('.match-card');
-                matchCards.forEach((card, index) => {
-                    if (matches.some(m => allMatches[index] === m)) {
-                        card.style.border = '3px solid var(--accent)';
-                        card.style.boxShadow = '0 0 20px rgba(34, 197, 94, 0.3)';
-                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                });
-            }, 500);
-        }
-
-        function copyRequestText(index) {
-            const request = requests[index];
-            if (request) {
-                navigator.clipboard.writeText(request.text);
-                showMessage('success', '📋 تم نسخ نص الطلب');
-            }
-        }
-
-        function copyOfferText(index) {
-            const offer = offers[index];
-            if (offer) {
-                navigator.clipboard.writeText(offer.text);
-                showMessage('success', '📋 تم نسخ نص العرض');
-            }
-        }
-
-        function editRequest(index) {
-            const request = requests[index];
-            if (!request) return;
-
-            const newText = prompt('تعديل نص الطلب:', request.text);
-            if (newText && newText.trim()) {
-                requests[index].text = newText.trim();
-                displayRequests();
-                updateTabCounters();
-                showMessage('success', '✅ تم تحديث الطلب');
-                
-                // حفظ التغييرات
-                saveDataToStorage();
-            }
-        }
-
-        function editOffer(index) {
-            const offer = offers[index];
-            if (!offer) return;
-
-            const newText = prompt('تعديل نص العرض:', offer.text);
-            if (newText && newText.trim()) {
-                offers[index].text = newText.trim();
-                displayOffers();
-                updateTabCounters();
-                showMessage('success', '✅ تم تحديث العرض');
-                
-                // حفظ التغييرات
-                saveDataToStorage();
-            }
-        }
-
-        function exportMatch(index) {
-            const match = allMatches[index];
-            if (!match) return;
-
-            const exportData = {
-                exportDate: new Date().toISOString(),
-                matchNumber: index + 1,
-                match: match
-            };
-
-            downloadJSON(exportData, `مطابقة_${index + 1}_${Date.now()}.json`);
-            showMessage('success', `📤 تم تصدير المطابقة ${index + 1}`);
-        }
-
-        function shareMatch(index) {
-            const match = allMatches[index];
-            if (!match) return;
-
-            const shareText = `🏠 مطابقة عقارية ${match.quality}
-
-📍 المنطقة: ${match.area || 'غير محدد'}
-💰 سعر الطلب: ${match.requested_price || 'غير محدد'}
-💰 سعر العرض: ${match.offered_price || 'غير محدد'}
-
-📝 الطلب: ${match.request_text}
-🏠 العرض: ${match.offer_text}
-
-💡 سبب المطابقة: ${match.reason}`;
-
-            if (navigator.share) {
-                navigator.share({
-                    title: 'مطابقة عقارية',
-                    text: shareText
-                });
-            } else {
-                navigator.clipboard.writeText(shareText);
-                showMessage('success', '📋 تم نسخ تفاصيل المطابقة للمشاركة');
-            }
-        }
-
-        function deleteMatch(index) {
-            if (confirm(`🗑️ هل أنت متأكد من حذف المطابقة ${index + 1}؟`)) {
-                allMatches.splice(index, 1);
-                displayResults();
-                updateTabCounters();
-                showMessage('success', '✅ تم حذف المطابقة');
-                
-                // حفظ التغييرات
-                saveMatchingResults(allMatches);
-            }
-        }
-
-        function duplicateMatch(index) {
-            const match = allMatches[index];
-            if (!match) return;
-
-            const duplicated = { ...match };
-            duplicated.reason = duplicated.reason + ' (نسخة)';
-            
-            allMatches.push(duplicated);
-            displayResults();
-            updateTabCounters();
-            showMessage('success', '✅ تم تكرار المطابقة');
-            
-            // حفظ التغييرات
-            saveMatchingResults(allMatches);
-        }
-
-        function clearAllResults() {
-            if (confirm('🗑️ هل أنت متأكد من حذف جميع النتائج؟ هذا الإجراء لا يمكن التراجع عنه!')) {
-                allMatches = [];
-                displayResults();
-                updateTabCounters();
-                showMessage('success', '✅ تم مسح جميع النتائج');
-                
-                // مسح من التخزين
-                localStorage.removeItem('smart_matching_results');
-            }
-        }
-
-        // ===================== Advanced Analysis Functions =====================
-        
-        function analyzeRequestsPatterns() {
-            if (requests.length === 0) {
-                showMessage('warning', '⚠️ لا توجد طلبات للتحليل');
-                return;
-            }
-
-            showMessage('info', '📊 جاري تحليل أنماط الطلبات...');
-
-            const patterns = {
-                propertyTypes: {},
-                priceRanges: {},
-                locations: {},
-                totalWithPrices: 0,
-                totalWithPhones: 0
-            };
-
-            requests.forEach(request => {
-                const text = request.text.toLowerCase();
-                
-                // تحليل أنواع العقارات
-                if (text.includes('شقة')) patterns.propertyTypes['شقة'] = (patterns.propertyTypes['شقة'] || 0) + 1;
-                if (text.includes('فيلا')) patterns.propertyTypes['فيلا'] = (patterns.propertyTypes['فيلا'] || 0) + 1;
-                if (text.includes('أرض')) patterns.propertyTypes['أرض'] = (patterns.propertyTypes['أرض'] || 0) + 1;
-                if (text.includes('محل')) patterns.propertyTypes['محل'] = (patterns.propertyTypes['محل'] || 0) + 1;
-                
-                // تحليل المواقع
-                if (text.includes('رياض')) patterns.locations['الرياض'] = (patterns.locations['الرياض'] || 0) + 1;
-                if (text.includes('جدة')) patterns.locations['جدة'] = (patterns.locations['جدة'] || 0) + 1;
-                if (text.includes('دمام')) patterns.locations['الدمام'] = (patterns.locations['الدمام'] || 0) + 1;
-                if (text.includes('مكة')) patterns.locations['مكة'] = (patterns.locations['مكة'] || 0) + 1;
-                
-                // عد الطلبات التي تحتوي على أسعار وهواتف
-                if (request.prices && request.prices.length > 0) patterns.totalWithPrices++;
-                if (request.phones && request.phones.length > 0) patterns.totalWithPhones++;
-            });
-
-            displayPatternsAnalysis('الطلبات', patterns, requests.length);
-        }
-
-        function analyzeOffersPatterns() {
-            if (offers.length === 0) {
-                showMessage('warning', '⚠️ لا توجد عروض للتحليل');
-                return;
-            }
-
-            showMessage('info', '📊 جاري تحليل أنماط العروض...');
-
-            const patterns = {
-                propertyTypes: {},
-                priceRanges: {},
-                locations: {},
-                totalWithPrices: 0,
-                totalWithPhones: 0
-            };
-
-            offers.forEach(offer => {
-                const text = offer.text.toLowerCase();
-                
-                // تحليل أنواع العقارات
-                if (text.includes('شقة')) patterns.propertyTypes['شقة'] = (patterns.propertyTypes['شقة'] || 0) + 1;
-                if (text.includes('فيلا')) patterns.propertyTypes['فيلا'] = (patterns.propertyTypes['فيلا'] || 0) + 1;
-                if (text.includes('أرض')) patterns.propertyTypes['أرض'] = (patterns.propertyTypes['أرض'] || 0) + 1;
-                if (text.includes('محل')) patterns.propertyTypes['محل'] = (patterns.propertyTypes['محل'] || 0) + 1;
-                
-                // تحليل المواقع
-                if (text.includes('رياض')) patterns.locations['الرياض'] = (patterns.locations['الرياض'] || 0) + 1;
-                if (text.includes('جدة')) patterns.locations['جدة'] = (patterns.locations['جدة'] || 0) + 1;
-                if (text.includes('دمام')) patterns.locations['الدمام'] = (patterns.locations['الدمام'] || 0) + 1;
-                if (text.includes('مكة')) patterns.locations['مكة'] = (patterns.locations['مكة'] || 0) + 1;
-                
-                // عد العروض التي تحتوي على أسعار وهواتف
-                if (offer.prices && offer.prices.length > 0) patterns.totalWithPrices++;
-                if (offer.phones && offer.phones.length > 0) patterns.totalWithPhones++;
-            });
-
-            displayPatternsAnalysis('العروض', patterns, offers.length);
-        }
-
-        function displayPatternsAnalysis(type, patterns, total) {
-            const analysisDiv = document.getElementById('analysis-results');
-            if (!analysisDiv) return;
-
-            const analysisHTML = `
-                <div class="analytics-card" style="margin-bottom: 20px;">
-                    <h4>📊 تحليل أنماط ${type}</h4>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px;">
-                        <div class="stat-item">
-                            <div class="stat-number">${total}</div>
-                            <div class="stat-label">إجمالي ${type}</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">${patterns.totalWithPrices}</div>
-                            <div class="stat-label">تحتوي على أسعار</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">${patterns.totalWithPhones}</div>
-                            <div class="stat-label">تحتوي على هواتف</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">${Math.round((patterns.totalWithPrices / total) * 100)}%</div>
-                            <div class="stat-label">نسبة الأسعار</div>
-                        </div>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <div>
-                            <h5>🏠 أنواع العقارات:</h5>
-                            <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
-                                ${Object.entries(patterns.propertyTypes).map(([type, count]) => 
-                                    `<div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                                        <span>${type}</span>
-                                        <span style="font-weight: bold; color: var(--accent);">${count}</span>
-                                    </div>`
-                                ).join('') || '<div style="color: var(--muted);">لا توجد بيانات</div>'}
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <h5>📍 المواقع:</h5>
-                            <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
-                                ${Object.entries(patterns.locations).map(([location, count]) => 
-                                    `<div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                                        <span>${location}</span>
-                                        <span style="font-weight: bold; color: var(--accent-2);">${count}</span>
-                                    </div>`
-                                ).join('') || '<div style="color: var(--muted);">لا توجد بيانات</div>'}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            analysisDiv.innerHTML = analysisHTML;
-            switchTab('analysis');
-            showMessage('success', `✅ تم تحليل أنماط ${type}`);
-        }
-
-        // ===================== Data Management =====================
-        
-        function saveDataToStorage() {
-            try {
-                const data = {
-                    requests: requests,
-                    offers: offers,
-                    timestamp: Date.now()
-                };
-                localStorage.setItem('smart_extracted_data', JSON.stringify(data));
-                logToSearch('💾 تم حفظ البيانات المستخرجة', 'success');
-            } catch (error) {
-                logToSearch(`❌ فشل حفظ البيانات: ${error.message}`, 'error');
-            }
-        }
-
-        function loadDataFromStorage() {
-            try {
-                const stored = localStorage.getItem('smart_extracted_data');
-                if (stored) {
-                    const data = JSON.parse(stored);
-                    if (data.requests) requests.push(...data.requests);
-                    if (data.offers) offers.push(...data.offers);
-                    
-                    updateTabCounters();
-                    updateSystemStats();
-                    logToSearch(`📚 تم تحميل البيانات المحفوظة`, 'success');
-                }
-            } catch (error) {
-                logToSearch(`❌ فشل تحميل البيانات: ${error.message}`, 'error');
-            }
-        }
-
-        function refreshRequestsView() {
-            displayRequests();
-            showMessage('info', '🔄 تم تحديث عرض الطلبات');
-        }
-
-        function refreshOffersView() {
-            displayOffers();
-            showMessage('info', '🔄 تم تحديث عرض العروض');
-        }
-
-        function refreshResultsView() {
-            displayResults();
-            showMessage('info', '🔄 تم تحديث عرض النتائج');
-        }
-        async function saveToSystemDatabase(fileData) {
-            try {
-                // Simulate saving to IndexedDB or localStorage
-                const savedFiles = JSON.parse(localStorage.getItem('smart_discovered_files') || '[]');
-                savedFiles.push(fileData);
-                localStorage.setItem('smart_discovered_files', JSON.stringify(savedFiles));
-                
-                logToSearch(`💾 تم حفظ ${fileData.name} في قاعدة البيانات`, 'success');
-                return true;
-            } catch (error) {
-                logToSearch(`❌ فشل حفظ ${fileData.name}: ${error.message}`, 'error');
-                return false;
-            }
-        }
-
-        async function loadFromSystemDatabase() {
-            try {
-                const savedFiles = JSON.parse(localStorage.getItem('smart_discovered_files') || '[]');
-                
-                if (savedFiles.length > 0) {
-                    allTextFiles.push(...savedFiles);
-                    
-                    // Extract requests and offers from saved files
-                    savedFiles.forEach(file => {
-                        if (file.analysisData) {
-                            if (file.analysisData.requests) {
-                                requests.push(...file.analysisData.requests.map(req => ({
-                                    text: req.text,
-                                    source: file.name,
-                                    phones: req.phones || [],
-                                    prices: req.prices || []
-                                })));
-                            }
-                            if (file.analysisData.offers) {
-                                offers.push(...file.analysisData.offers.map(offer => ({
-                                    text: offer.text,
-                                    source: file.name,
-                                    phones: offer.phones || [],
-                                    prices: offer.prices || []
-                                })));
-                            }
-                        }
-                    });
-                    
-                    updateSystemStats();
-                    logToSearch(`📚 تم تحميل ${savedFiles.length} ملف من قاعدة البيانات`, 'success');
-                }
-            } catch (error) {
-                logToSearch(`❌ فشل تحميل البيانات المحفوظة: ${error.message}`, 'error');
-            }
-        }
-
-        function updateSystemStats() {
-            document.getElementById('total-docs').textContent = allTextFiles.length;
-            document.getElementById('request-count').textContent = requests.length;
-            document.getElementById('offer-count').textContent = offers.length;
-        }
-
-        // ===================== Export and Backup Functions =====================
-        function exportAnalysis(fileName) {
-            const file = discoveredFiles.find(f => f.name === fileName);
-            if (!file) return;
-
-            const exportData = {
-                fileName: file.name,
-                filePath: file.path,
-                analysisDate: new Date().toISOString(),
-                fileSize: file.size,
-                analysis: smartAnalyzer.analysisCache.get(`${file.path}_${file.lastModified}`)
-            };
-
-            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `تحليل_${fileName}_${Date.now()}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-
-            showMessage('success', `📤 تم تصدير تحليل ${fileName}`);
-        }
-
-        function exportDiscoveredData() {
-            if (discoveredFiles.length === 0) {
-                showMessage('warning', '⚠️ لا توجد بيانات مكتشفة للتصدير');
-                return;
-            }
-
-            const exportData = {
-                exportDate: new Date().toISOString(),
-                systemInfo: {
-                    totalFiles: discoveredFiles.length,
-                    totalRequests: requests.length,
-                    totalOffers: offers.length,
-                    scanPaths: ANDROID_SEARCH_PATHS
-                },
-                discoveredFiles: discoveredFiles.map(file => ({
-                    name: file.name,
-                    path: file.path,
-                    size: file.size,
-                    type: file.type,
-                    lastModified: file.lastModified,
-                    analysisData: smartAnalyzer.analysisCache.get(`${file.path}_${file.lastModified}`)
-                })),
-                extractedRequests: requests,
-                extractedOffers: offers
-            };
-
-            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `البيانات_المكتشفة_${Date.now()}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-
-            showMessage('success', `📦 تم تصدير جميع البيانات المكتشفة`);
-        }
-
-        // ===================== Performance Monitoring =====================
-        class PerformanceMonitor {
-            constructor() {
-                this.metrics = {
-                    filesScanned: 0,
-                    scanTime: 0,
-                    analysisTime: 0,
-                    matchingTime: 0,
-                    memoryUsage: 0
-                };
-            }
-
-            startTimer(operation) {
-                this[`${operation}StartTime`] = performance.now();
-            }
-
-            endTimer(operation) {
-                const duration = performance.now() - this[`${operation}StartTime`];
-                this.metrics[`${operation}Time`] = duration;
-                logToSearch(`⏱️ ${operation}: ${Math.round(duration)}ms`, 'info');
-            }
-
-            updateFileCount(count) {
-                this.metrics.filesScanned = count;
-            }
-
-            getReport() {
-                return {
-                    ...this.metrics,
-                    memoryUsage: this.getMemoryUsage()
-                };
-            }
-
-            getMemoryUsage() {
-                if (performance.memory) {
-                    return Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) + ' MB';
-                }
-                return 'غير متاح';
-            }
-        }
-
-        const performanceMonitor = new PerformanceMonitor();
-
-        // ===================== Advanced Settings Panel =====================
-        function initializeDiscoverySettings() {
-            const settingsContainer = document.getElementById('discovery-settings');
-            if (!settingsContainer) return;
-
-            settingsContainer.innerHTML = `
-                <div class="analytics-card">
-                    <h4>⚙️ إعدادات البحث المتقدم</h4>
-                    
-                    <div style="margin-bottom: 16px;">
-                        <label>عمق البحث:</label>
-                        <select id="search-depth">
-                            <option value="1">سطحي (مجلد واحد)</option>
-                            <option value="3" selected>متوسط (3 مستويات)</option>
-                            <option value="5">عميق (5 مستويات)</option>
-                            <option value="-1">شامل (جميع المستويات)</option>
-                        </select>
-                    </div>
-
-                    <div style="margin-bottom: 16px;">
-                        <label>أنواع الملفات:</label>
-                        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px;">
-                            <label><input type="checkbox" checked> .txt</label>
-                            <label><input type="checkbox" checked> .json</label>
-                            <label><input type="checkbox"> .csv</label>
-                            <label><input type="checkbox"> .log</label>
-                            <label><input type="checkbox"> .md</label>
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 16px;">
-                        <label>حد حجم الملف:</label>
-                        <select id="file-size-limit">
-                            <option value="1">1 MB</option>
-                            <option value="5" selected>5 MB</option>
-                            <option value="10">10 MB</option>
-                            <option value="50">50 MB</option>
-                            <option value="-1">بلا حد</option>
-                        </select>
-                    </div>
-
-                    <div style="margin-bottom: 16px;">
-                        <label><input type="checkbox" id="skip-hidden" checked> تجاهل الملفات المخفية</label>
-                    </div>
-
-                    <div style="margin-bottom: 16px;">
-                        <label><input type="checkbox" id="auto-analyze" checked> تحليل تلقائي عند الاكتشاف</label>
-                    </div>
-
-                    <div style="margin-top: 20px;">
-                        <button class="btn primary" onclick="applyAdvancedSettings()">تطبيق الإعدادات</button>
-                        <button class="btn" onclick="resetSettings()">إعادة تعيين</button>
-                        <button class="btn success" onclick="exportDiscoveredData()">📤 تصدير البيانات</button>
-                    </div>
-
-                    <div style="margin-top: 20px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 8px;">
-                        <h5>📊 إحصائيات الأداء</h5>
-                        <div id="performance-stats"></div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function applyAdvancedSettings() {
-            showMessage('info', '⚙️ تطبيق الإعدادات المتقدمة...');
-            
-            const settings = {
-                searchDepth: document.getElementById('search-depth')?.value || 3,
-                fileSizeLimit: document.getElementById('file-size-limit')?.value || 5,
-                skipHidden: document.getElementById('skip-hidden')?.checked || true,
-                autoAnalyze: document.getElementById('auto-analyze')?.checked || true
-            };
-
-            localStorage.setItem('smart_search_settings', JSON.stringify(settings));
-            logToSearch('💾 تم حفظ الإعدادات المتقدمة', 'success');
-            showMessage('success', '✅ تم تطبيق الإعدادات');
-        }
-
-        function resetSettings() {
-            localStorage.removeItem('smart_search_settings');
-            initializeDiscoverySettings();
-            showMessage('info', '🔄 تم إعادة تعيين الإعدادات');
-        }
-
-        function updatePerformanceStats() {
-            const statsContainer = document.getElementById('performance-stats');
-            if (!statsContainer) return;
-
-            const report = performanceMonitor.getReport();
-            statsContainer.innerHTML = `
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px;">
-                    <div><strong>ملفات مفحوصة:</strong> ${report.filesScanned}</div>
-                    <div><strong>وقت المسح:</strong> ${Math.round(report.scanTime)}ms</div>
-                    <div><strong>وقت التحليل:</strong> ${Math.round(report.analysisTime)}ms</div>
-                    <div><strong>استخدام الذاكرة:</strong> ${report.memoryUsage}</div>
-                </div>
-            `;
-        }
-
-        // ===================== Initialize Enhanced System =====================
-        document.addEventListener('DOMContentLoaded', async () => {
-            logToSearch('🚀 نظام البحث الذكي المطور جاهز للعمل', 'success');
-            logToSearch('📱 جاهز للبحث في ملفات الأندرويد', 'info');
-            logToSearch('🤖 AI محلل البيانات مُفعل', 'success');
-            
-            // Initialize settings panel
-            initializeDiscoverySettings();
-            
-            // Load saved data
-            await loadFromSystemDatabase();
-            await loadDataFromStorage();
-            
-            // Load saved matching results
-            try {
-                const savedResults = localStorage.getItem('smart_matching_results');
-                if (savedResults) {
-                    const resultsData = JSON.parse(savedResults);
-                    if (resultsData.matches && Array.isArray(resultsData.matches)) {
-                        allMatches = resultsData.matches;
-                        logToSearch(`📊 تم تحميل ${allMatches.length} نتيجة مطابقة محفوظة`, 'success');
-                    }
-                }
-            } catch (error) {
-                logToSearch(`❌ فشل تحميل النتائج المحفوظة: ${error.message}`, 'error');
-            }
-            
-            // Update all counters and displays
-            updateTabCounters();
-            updateSystemStats();
-            
-            // Update performance monitor
-            setInterval(updatePerformanceStats, 5000);
-            
-            // Auto-refresh data every 30 seconds
-            setInterval(() => {
-                updateTabCounters();
-                updateSystemStats();
-            }, 30000);
-            
-            showMessage('success', '🧠 النظام الذكي المطور جاهز! ابدأ البحث لاكتشاف الملفات');
-            
-            // إذا كان هناك بيانات محفوظة، اعرضها
-            if (requests.length > 0 || offers.length > 0) {
-                showMessage('info', `📚 تم العثور على بيانات محفوظة: ${requests.length} طلب، ${offers.length} عرض`);
-            }
-        });
-
-        // ===================== Enhanced Error Handling =====================
-        window.addEventListener('error', (event) => {
-            logToSearch(`💥 خطأ نظام: ${event.error?.message || event.message}`, 'error');
-            console.error('System error:', event.error);
-        });
-
-        window.addEventListener('unhandledrejection', (event) => {
-            logToSearch(`💥 خطأ غير محمي: ${event.reason}`, 'error');
-            console.error('Unhandled rejection:', event.reason);
         });
     </script>
 </body>
-
 </html>
